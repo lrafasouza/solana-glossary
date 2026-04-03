@@ -1,5 +1,5 @@
 // src/commands/favorites.ts
-import { getTerm } from "@stbr/solana-glossary";
+import { getTerm } from "../glossary/index.js";
 import { InlineKeyboard } from "grammy";
 import { db } from "../db/index.js";
 import type { MyContext } from "../context.js";

@@ -1,6 +1,6 @@
 // src/handlers/callbacks.ts
-import { getTerm, getTermsByCategory, getCategories } from "@stbr/solana-glossary";
-import type { Category } from "@stbr/solana-glossary";
+import { getTerm, getTermsByCategory, getCategories } from "../glossary/index.js";
+import type { Category } from "../glossary/index.js";
 import { InlineKeyboard } from "grammy";
 import { formatTermCard, formatTermList, formatCategoryName } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";

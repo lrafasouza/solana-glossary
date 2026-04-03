@@ -3,8 +3,8 @@ import {
   getTerm,
   searchTerms as sdkSearch,
   allTerms,
-} from "@stbr/solana-glossary";
-import type { GlossaryTerm } from "@stbr/solana-glossary";
+} from "../glossary/index.js";
+import type { GlossaryTerm } from "../glossary/index.js";
 
 export type LookupResult =
   | { type: "found"; term: GlossaryTerm }

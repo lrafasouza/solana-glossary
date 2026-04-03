@@ -5,7 +5,7 @@ import {
   formatCategoryName,
   escapeHtml,
 } from "../../src/utils/format.js";
-import type { GlossaryTerm } from "@stbr/solana-glossary";
+import type { GlossaryTerm } from "../../src/glossary/index.js";
 
 const mockT = (key: string) => key;
 

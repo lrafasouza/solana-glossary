@@ -2,7 +2,7 @@
 import { InlineQueryResultBuilder } from "grammy";
 import { lookupTerm, getRandomTerms } from "../utils/search.js";
 import { formatTermCard } from "../utils/format.js";
-import type { GlossaryTerm } from "@stbr/solana-glossary";
+import type { GlossaryTerm } from "../glossary/index.js";
 import type { MyContext } from "../context.js";
 
 function buildInlineResult(term: GlossaryTerm, t: MyContext["t"]) {

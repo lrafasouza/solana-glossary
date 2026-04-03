@@ -1,7 +1,7 @@
 // src/commands/categories.ts
 import { InlineKeyboard } from "grammy";
-import { getCategories, getTermsByCategory } from "@stbr/solana-glossary";
-import type { Category } from "@stbr/solana-glossary";
+import { getCategories, getTermsByCategory } from "../glossary/index.js";
+import type { Category } from "../glossary/index.js";
 import { formatTermList, formatCategoryName } from "../utils/format.js";
 import { buildCategoryPageKeyboard } from "../utils/keyboard.js";
 import type { MyContext } from "../context.js";

@@ -1,6 +1,6 @@
 // src/commands/quiz.ts
-import { allTerms, getTermsByCategory } from "@stbr/solana-glossary";
-import type { GlossaryTerm } from "@stbr/solana-glossary";
+import { allTerms, getTermsByCategory } from "../glossary/index.js";
+import type { GlossaryTerm } from "../glossary/index.js";
 import { InlineKeyboard } from "grammy";
 import { db } from "../db/index.js";
 import type { MyContext } from "../context.js";

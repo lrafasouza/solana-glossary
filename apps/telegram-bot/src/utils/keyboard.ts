@@ -1,7 +1,7 @@
 // src/utils/keyboard.ts
 import { InlineKeyboard } from "grammy";
-import type { GlossaryTerm } from "@stbr/solana-glossary";
-import type { Category } from "@stbr/solana-glossary";
+import type { GlossaryTerm } from "../glossary/index.js";
+import type { Category } from "../glossary/index.js";
 import type { MyContext } from "../context.js";
 import { db } from "../db/index.js";
 

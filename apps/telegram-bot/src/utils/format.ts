@@ -1,6 +1,6 @@
 // src/utils/format.ts
-import type { GlossaryTerm, Category } from "@stbr/solana-glossary";
-import { getTermLocalized } from "@stbr/solana-glossary";
+import type { GlossaryTerm, Category } from "../glossary/index.js";
+import { getTermLocalized } from "../glossary/index.js";
 import type { MyContext } from "../context.js";
 
 export type TranslateFn = (key: string, params?: Record<string, string | number>) => string;

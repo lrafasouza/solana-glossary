@@ -1,5 +1,5 @@
 // src/commands/random.ts
-import { allTerms } from "@stbr/solana-glossary";
+import { allTerms } from "../glossary/index.js";
 import { formatTermCard } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { db } from "../db/index.js";
