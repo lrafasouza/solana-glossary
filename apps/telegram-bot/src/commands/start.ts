@@ -3,10 +3,8 @@ import { InlineKeyboard } from "grammy";
 import { lookupTerm } from "../utils/search.js";
 import { formatTermCard } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
+import { IMAGES } from "../config.js";
 import type { MyContext } from "../context.js";
-
-// Optional banner image — replace with your own hosted image URL, or set to "" to skip
-export const BANNER_URL = "";
 
 const LANGUAGE_PICKER = `🌐 <b>Choose your language</b>
 Escolha seu idioma
@@ -33,12 +31,21 @@ export async function startCommand(ctx: MyContext): Promise<void> {
     }
   }
 
-  // New user — no language set yet → show onboarding picker
+  // New user — no language set yet → show onboarding picker with image
   if (!ctx.session.language) {
-    await ctx.reply(LANGUAGE_PICKER, {
-      parse_mode: "HTML",
-      reply_markup: languageKeyboard,
-    });
+    try {
+      await ctx.replyWithPhoto(IMAGES.languagePicker, {
+        caption: LANGUAGE_PICKER,
+        parse_mode: "HTML",
+        reply_markup: languageKeyboard,
+      });
+    } catch (err) {
+      // Fallback to text-only if image fails
+      await ctx.reply(LANGUAGE_PICKER, {
+        parse_mode: "HTML",
+        reply_markup: languageKeyboard,
+      });
+    }
     return;
   }
 
@@ -48,9 +55,17 @@ export async function startCommand(ctx: MyContext): Promise<void> {
 
 export async function sendWelcome(ctx: MyContext): Promise<void> {
   const text = ctx.t("start-welcome", { bot_username: ctx.me.username });
-  if (BANNER_URL) {
-    await ctx.replyWithPhoto(BANNER_URL, { caption: text, parse_mode: "HTML" });
-  } else {
+
+  try {
+    await ctx.replyWithPhoto(IMAGES.welcomeBanner, {
+      caption: text,
+      parse_mode: "HTML",
+    });
+  } catch (err) {
+    // Fallback to text-only
     await ctx.reply(text, { parse_mode: "HTML" });
   }
+
+  // Send onboarding tips as follow-up
+  await ctx.reply(ctx.t("onboarding-tips"), { parse_mode: "HTML" });
 }

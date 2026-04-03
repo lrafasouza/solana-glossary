@@ -11,3 +11,11 @@ export const config = {
   port: parseInt(process.env["PORT"] ?? "3000", 10),
   isProduction: !!process.env["WEBHOOK_DOMAIN"],
 };
+
+// Image assets hosted on GitHub
+export const ASSETS_BASE_URL = "https://raw.githubusercontent.com/solanabr/solana-glossary/main/apps/telegram-bot/assets";
+
+export const IMAGES = {
+  languagePicker: `${ASSETS_BASE_URL}/chooselangugage.png`,
+  welcomeBanner: `${ASSETS_BASE_URL}/welcome-banner.png`,
+} as const;

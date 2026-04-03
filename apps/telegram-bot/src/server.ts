@@ -11,8 +11,12 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Iniciar o bot" },
         { command: "glossario", description: "Buscar um termo em português" },
+        { command: "aleatorio", description: "Termo aleatório" },
         { command: "categorias", description: "Explorar as 14 categorias" },
         { command: "termododia", description: "Termo do dia" },
+        { command: "quiz", description: "Iniciar quiz" },
+        { command: "favoritos", description: "Meus termos salvos" },
+        { command: "historico", description: "Últimos termos vistos" },
         { command: "idioma", description: "Trocar idioma (pt, en, es)" },
         { command: "help", description: "Ver todos os comandos" },
       ],
@@ -22,8 +26,12 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Start the bot" },
         { command: "glossary", description: "Search a Solana term" },
+        { command: "random", description: "Random term" },
         { command: "categories", description: "Browse all 14 categories" },
         { command: "termofday", description: "Term of the day" },
+        { command: "quiz", description: "Start quiz" },
+        { command: "favorites", description: "Saved terms" },
+        { command: "history", description: "Recently viewed terms" },
         { command: "language", description: "Change language (pt, en, es)" },
         { command: "help", description: "Show all commands" },
       ],
@@ -33,8 +41,12 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Iniciar el bot" },
         { command: "glosario", description: "Buscar un término en español" },
+        { command: "aleatorio", description: "Término aleatorio" },
         { command: "categorias", description: "Explorar las 14 categorías" },
         { command: "terminodelhoy", description: "Término del día" },
+        { command: "quiz", description: "Iniciar quiz" },
+        { command: "favoritos", description: "Mis términos guardados" },
+        { command: "historial", description: "Términos vistos recientemente" },
         { command: "idioma", description: "Cambiar idioma (pt, en, es)" },
         { command: "help", description: "Ver todos los comandos" },
       ],
@@ -44,8 +56,12 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Start the bot" },
         { command: "glossary", description: "Search a Solana term" },
+        { command: "random", description: "Random term" },
         { command: "categories", description: "Browse all 14 categories" },
         { command: "termofday", description: "Term of the day" },
+        { command: "quiz", description: "Start quiz" },
+        { command: "favorites", description: "Saved terms" },
+        { command: "history", description: "Recently viewed terms" },
         { command: "language", description: "Change language (pt, en, es)" },
         { command: "help", description: "Show all commands" },
       ],
@@ -55,7 +71,7 @@ async function setCommands() {
   const promises = commandSets.map((set) =>
     set.lang === "default"
       ? bot.api.setMyCommands(set.commands)
-      : bot.api.setMyCommands(set.commands, { language_code: set.lang })
+      : bot.api.setMyCommands(set.commands, { language_code: set.lang as "pt" | "en" | "es" })
   );
 
   const results = await Promise.allSettled(promises);
@@ -71,6 +87,16 @@ async function setCommands() {
 }
 
 async function start() {
+  // Set chat menu button to show commands menu
+  try {
+    await bot.api.setChatMenuButton({
+      menu_button: { type: "commands" },
+    });
+    console.log("✓ Chat menu button configured");
+  } catch (err) {
+    console.error("✗ Failed to set chat menu button:", err);
+  }
+
   if (config.isProduction) {
     // Webhook mode — used on Railway
     const app = express();

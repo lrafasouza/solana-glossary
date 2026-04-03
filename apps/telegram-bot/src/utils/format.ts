@@ -1,7 +1,9 @@
 // src/utils/format.ts
 import type { GlossaryTerm, Category } from "@stbr/solana-glossary";
+import { getTermLocalized } from "@stbr/solana-glossary";
+import type { MyContext } from "../context.js";
 
-export type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
+export type TranslateFn = (key: string, params?: Record<string, string | number>) => string;
 
 export function escapeHtml(text: string): string {
   return text
@@ -17,6 +19,13 @@ const ACRONYMS: Record<string, string> = {
   defi: "DeFi",
 };
 
+const DOCS_LINK_CATEGORIES = new Set([
+  "core-protocol",
+  "infrastructure",
+  "network",
+  "defi"
+]);
+
 export function formatCategoryName(category: string): string {
   return category
     .split("-")
@@ -24,26 +33,48 @@ export function formatCategoryName(category: string): string {
     .join(" ");
 }
 
-export function formatTermCard(term: GlossaryTerm, t: TranslateFn): string {
+export function formatTermCard(
+  term: GlossaryTerm,
+  t: TranslateFn,
+  locale?: string
+): string {
+  // Get localized content
+  let displayTerm = term.term;
+  let displayDefinition = term.definition;
+
+  if (locale && (locale === "pt" || locale === "es")) {
+    const localized = getTermLocalized(term.id, locale);
+    if (localized) {
+      displayTerm = localized.term;
+      displayDefinition = localized.definition;
+    }
+  }
+
   const lines: string[] = [
-    `📖 <b>${escapeHtml(term.term)}</b>`,
+    `📖 <b>${escapeHtml(displayTerm)}</b>`,
     `🏷️ <i>${formatCategoryName(term.category)}</i>`,
     "",
-    escapeHtml(term.definition),
+    escapeHtml(displayDefinition),
   ];
 
   if (term.aliases && term.aliases.length > 0) {
     lines.push(
       "",
-      `${t("term-aliases")}: ${term.aliases.map((a) => `<code>${escapeHtml(a)}</code>`).join(", ")}`
+      `${t("term-aliases")}: ${term.aliases.map((a: string) => `<code>${escapeHtml(a)}</code>`).join(", ")}`
     );
   }
 
   if (term.related && term.related.length > 0) {
     const shown = term.related.slice(0, 5);
     lines.push(
-      `${t("term-related")}: ${shown.map((r) => `<code>${escapeHtml(r)}</code>`).join(" · ")}`
+      `${t("term-related")}: ${shown.map((r: string) => `<code>${escapeHtml(r)}</code>`).join(" · ")}`
     );
+  }
+
+  // External links for specific categories
+  if (DOCS_LINK_CATEGORIES.has(term.category)) {
+    const docsUrl = `https://solana.com/docs/terminology#${term.id}`;
+    lines.push("", t("term-read-more", { url: docsUrl }));
   }
 
   return lines.join("\n");

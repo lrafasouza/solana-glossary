@@ -11,21 +11,23 @@ help-message =
     📖 <b>Solana Glossary Bot</b>
 
     🔍 <b>Search:</b>
-    /glossary &lt;term&gt; — search in English
-    /glossario &lt;term&gt; — buscar em português
-    /glosario &lt;term&gt; — buscar en español
+    /glossary &lt;term&gt; — look up a Solana term
+    /random — random term
 
     📂 <b>Browse:</b>
-    /categories — list all 14 categories
+    /categories — browse 14 categories
     /category &lt;name&gt; — terms in a category
 
     📅 <b>Learn:</b>
     /termofday — term of the day
+    /quiz — start quiz
+    /favorites — saved terms
+    /history — recently viewed terms
 
     🌐 <b>Language:</b>
     /language pt|en|es — change language
 
-    💡 Type <code>@{ $bot_username } &lt;term&gt;</code> in any chat or group!
+    💡 Type <code>@{ $bot_username } &lt;term&gt;</code> in any chat!
 
 term-aliases = 🔗 Aliases
 term-related = 📂 Related
@@ -33,6 +35,63 @@ term-related = 📂 Related
 btn-related = 🔍 Related terms
 btn-category = 📂 Browse category
 btn-share = 📤 Share
+
+# Pagination
+btn-prev = ← Previous
+btn-next = Next →
+btn-page = Page { $current }/{ $total }
+
+# Random term
+random-term-header = 🎲 Random term
+
+# Quiz
+quiz-question = 🧠 <b>Which term is described below?</b>\n\n<i>{ $definition }</i>
+quiz-option-a = A) { $term }
+quiz-option-b = B) { $term }
+quiz-option-c = C) { $term }
+quiz-option-d = D) { $term }
+quiz-correct = ✅ <b>Correct!</b> It was <b>{ $term }</b>.
+quiz-wrong = ❌ <b>Wrong.</b> The answer was <b>{ $term }</b>.
+quiz-no-session = ❌ No active quiz. Use /quiz to start.
+quiz-no-user = ❌ User required for quiz.
+
+# Favorites
+btn-fav-add = ⭐ Save
+btn-fav-remove = ★ Remove
+favorite-added = ⭐ Saved!
+favorite-removed = Removed.
+favorites-header = ⭐ <b>Your favorites</b> — { $count } terms
+favorites-empty = No saved terms yet. Tap ⭐ on any term card.
+favorites-limit = ⚠️ Favorites limit (50) reached.
+
+# History
+history-header = 🕐 <b>Recently viewed</b>
+history-empty = You haven't looked up any terms yet.
+
+# Streaks
+streak-day = 🔥 { $count } day streak
+streak-days = 🔥 { $count } day streak
+streak-first = 🔥 First day!
+
+# Did you mean
+did-you-mean = ❌ No results for that term.\n\nDid you mean: <code>{ $term }</code>?
+btn-did-you-mean = Yes, show →
+
+# External links
+term-read-more = 🔗 <a href="{ $url }">Read Solana docs</a>
+
+# Onboarding
+onboarding-tips =
+    💡 <b>Quick tips:</b>
+
+    🔍 Look up any term: <code>/glossary proof-of-history</code>
+    📂 Browse by category: /categories
+    🧠 Test your knowledge: /quiz
+
+# Feedback
+btn-feedback-up = 👍
+btn-feedback-down = 👎
+feedback-thanks = Thanks for your feedback!
 
 term-not-found = ❌ No results for <b>{ $query }</b>. Use /categories to explore.
 multiple-results = 🔍 Found <b>{ $count }</b> results for <b>{ $query }</b>. Choose one:

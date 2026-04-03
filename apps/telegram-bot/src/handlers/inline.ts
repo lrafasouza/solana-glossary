@@ -15,7 +15,7 @@ function buildInlineResult(term: GlossaryTerm, t: MyContext["t"]) {
 }
 
 export async function handleInlineQuery(ctx: MyContext): Promise<void> {
-  const query = ctx.inlineQuery.query.trim();
+  const query = ctx.inlineQuery?.query.trim() ?? "";
 
   let terms: GlossaryTerm[];
 

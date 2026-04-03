@@ -13,6 +13,10 @@ import { languageCommand } from "./commands/language.js";
 import { glossaryCommand } from "./commands/glossary.js";
 import { categoriesCommand, categoryCommand } from "./commands/categories.js";
 import { dailyTermCommand } from "./commands/daily.js";
+import { randomTermCommand } from "./commands/random.js";
+import { quizCommand } from "./commands/quiz.js";
+import { favoritesCommand } from "./commands/favorites.js";
+import { historyCommand } from "./commands/history.js";
 
 // Handlers
 import {
@@ -21,6 +25,11 @@ import {
   handleCategoryCallback,
   handleSelectCallback,
   handleBrowseCatCallback,
+  handleCatPageCallback,
+  handleFavAddCallback,
+  handleFavRemoveCallback,
+  handleQuizAnswerCallback,
+  handleFeedbackCallback,
 } from "./handlers/callbacks.js";
 import { handleInlineQuery } from "./handlers/inline.js";
 import { handleTextMessage } from "./handlers/text.js";
@@ -32,7 +41,18 @@ export const bot = new Bot<MyContext>(config.botToken);
 // 1. Auto-retry: handles Telegram 429 (flood) and 500+ errors automatically
 bot.api.config.use(autoRetry());
 
-// 2. Rate limiter: 3 requests per 2 seconds per user
+// 2. Sessions: keyed by user ID so inline queries (no chat) also work
+bot.use(
+  session<SessionData, MyContext>({
+    initial: (): SessionData => ({ language: undefined }),
+    getSessionKey: (ctx) => ctx.from?.id.toString(),
+  })
+);
+
+// 3. i18n: locale detection from session → language_code → "en"
+bot.use(i18n);
+
+// 4. Rate limiter: 3 requests per 2 seconds per user (after i18n so ctx.t is available)
 bot.use(
   limit({
     timeFrame: 2000,
@@ -44,17 +64,6 @@ bot.use(
   })
 );
 
-// 3. Sessions: keyed by user ID so inline queries (no chat) also work
-bot.use(
-  session<SessionData, MyContext>({
-    initial: (): SessionData => ({ language: undefined }),
-    getSessionKey: (ctx) => ctx.from?.id.toString(),
-  })
-);
-
-// 4. i18n: locale detection from session → language_code → "en"
-bot.use(i18n);
-
 // ── Commands ──────────────────────────────────────────────────────────────────
 
 bot.command("start", startCommand);
@@ -65,6 +74,10 @@ bot.command(["glossario", "glossary", "glosario"], glossaryCommand);
 bot.command(["categorias", "categories"], categoriesCommand);
 bot.command(["categoria", "category"], categoryCommand);
 bot.command(["termododia", "termofday", "terminodelhoy"], dailyTermCommand);
+bot.command(["aleatorio", "random"], randomTermCommand);
+bot.command(["quiz"], quizCommand);
+bot.command(["favoritos", "favorites"], favoritesCommand);
+bot.command(["historico", "history", "historial"], historyCommand);
 
 // ── Callback queries ──────────────────────────────────────────────────────────
 
@@ -73,6 +86,11 @@ bot.callbackQuery(/^related:/, handleRelatedCallback);
 bot.callbackQuery(/^category:/, handleCategoryCallback);
 bot.callbackQuery(/^select:/, handleSelectCallback);
 bot.callbackQuery(/^browse_cat:/, handleBrowseCatCallback);
+bot.callbackQuery(/^cat_page:/, handleCatPageCallback);
+bot.callbackQuery(/^fav_add:/, handleFavAddCallback);
+bot.callbackQuery(/^fav_remove:/, handleFavRemoveCallback);
+bot.callbackQuery(/^quiz_answer:/, handleQuizAnswerCallback);
+bot.callbackQuery(/^feedback:/, handleFeedbackCallback);
 
 // ── Inline mode ───────────────────────────────────────────────────────────────
 
@@ -93,5 +111,5 @@ bot.catch((err) => {
     update_id: update?.update_id,
     type: updateType,
   });
-  err.ctx?.reply(err.ctx.t("internal-error")).catch(() => {});
+  err.ctx?.reply(err.ctx.t("internal-error")).catch(() => { });
 });

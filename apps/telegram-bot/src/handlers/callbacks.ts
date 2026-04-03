@@ -1,10 +1,11 @@
 // src/handlers/callbacks.ts
-import { getTerm, getTermsByCategory } from "@stbr/solana-glossary";
+import { getTerm, getTermsByCategory, getCategories } from "@stbr/solana-glossary";
 import type { Category } from "@stbr/solana-glossary";
 import { formatTermCard, formatTermList, formatCategoryName } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { sendWelcome } from "../commands/start.js";
 import { sendCategoryTerms } from "../commands/categories.js";
+import { db } from "../db/index.js";
 import type { MyContext, SessionData } from "../context.js";
 
 /** Strip HTML tags for use in plain-text callback popups */
@@ -19,6 +20,7 @@ export async function handleLangCallback(ctx: MyContext): Promise<void> {
   const lang = data.slice("lang:".length) as SessionData["language"];
 
   ctx.session.language = lang;
+  await ctx.i18n.useLocale(lang!);
   await ctx.answerCallbackQuery();
 
   // Remove the language picker message and show welcome
@@ -41,7 +43,7 @@ export async function handleRelatedCallback(ctx: MyContext): Promise<void> {
   }
 
   const relatedTerms = term.related
-    .map((id) => getTerm(id))
+    .map((id: string) => getTerm(id))
     .filter((t): t is NonNullable<typeof t> => t !== undefined)
     .slice(0, 8);
 
@@ -65,7 +67,7 @@ export async function handleCategoryCallback(ctx: MyContext): Promise<void> {
   }
 
   await ctx.answerCallbackQuery();
-  await sendCategoryTerms(ctx, term.category);
+  await sendCategoryTerms(ctx, term.category, 1, false);
 }
 
 export async function handleSelectCallback(ctx: MyContext): Promise<void> {
@@ -80,11 +82,16 @@ export async function handleSelectCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const card = formatTermCard(term, ctx.t.bind(ctx));
+  const userId = ctx.from?.id;
+  if (userId) {
+    db.addHistory(userId, termId);
+  }
+
+  const card = formatTermCard(term, ctx.t.bind(ctx), ctx.session.language || "en");
   await ctx.answerCallbackQuery();
   await ctx.reply(card, {
     parse_mode: "HTML",
-    reply_markup: buildTermKeyboard(termId, ctx.t.bind(ctx)),
+    reply_markup: buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
   });
 }
 
@@ -92,6 +99,130 @@ export async function handleSelectCallback(ctx: MyContext): Promise<void> {
 
 export async function handleBrowseCatCallback(ctx: MyContext): Promise<void> {
   const category = (ctx.callbackQuery?.data ?? "").slice("browse_cat:".length) as Category;
+
+  const categories = getCategories();
+  if (!categories.includes(category)) {
+    await ctx.answerCallbackQuery({ text: ctx.t("category-not-found", { name: category }), show_alert: true });
+    return;
+  }
+
   await ctx.answerCallbackQuery();
-  await sendCategoryTerms(ctx, category);
+  await sendCategoryTerms(ctx, category, 1, false);
+}
+
+// ── Category pagination ─────────────────────────────────────────────────────
+
+export async function handleCatPageCallback(ctx: MyContext): Promise<void> {
+  const data = ctx.callbackQuery?.data ?? "";
+  const match = data.match(/^cat_page:(.+):(\d+)$/);
+  if (!match) {
+    await ctx.answerCallbackQuery({ text: "Invalid callback" });
+    return;
+  }
+
+  const category = match[1] as Category;
+  const page = parseInt(match[2], 10);
+
+  // Validate category
+  const categories = getCategories();
+  if (!categories.includes(category)) {
+    await ctx.answerCallbackQuery({ text: ctx.t("category-not-found", { name: category }), show_alert: true });
+    return;
+  }
+
+  await sendCategoryTerms(ctx, category, page, true);
+  await ctx.answerCallbackQuery();
+}
+
+// ── Favorites ────────────────────────────────────────────────────────────────
+
+export async function handleFavAddCallback(ctx: MyContext): Promise<void> {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("internal-error") });
+    return;
+  }
+
+  const termId = (ctx.callbackQuery?.data ?? "").slice("fav_add:".length);
+
+  try {
+    db.addFavorite(userId, termId);
+    await ctx.answerCallbackQuery({ text: ctx.t("favorite-added") });
+
+    // Update keyboard to show remove button
+    await ctx.editMessageReplyMarkup({
+      reply_markup: buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
+    });
+  } catch (err) {
+    await ctx.answerCallbackQuery({ text: ctx.t("favorites-limit"), show_alert: true });
+  }
+}
+
+export async function handleFavRemoveCallback(ctx: MyContext): Promise<void> {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("internal-error") });
+    return;
+  }
+
+  const termId = (ctx.callbackQuery?.data ?? "").slice("fav_remove:".length);
+
+  db.removeFavorite(userId, termId);
+  await ctx.answerCallbackQuery({ text: ctx.t("favorite-removed") });
+
+  // Update keyboard to show add button
+  await ctx.editMessageReplyMarkup({
+    reply_markup: buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
+  });
+}
+
+// ── Quiz ────────────────────────────────────────────────────────────────────
+
+export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  const session = db.getQuizSession(userId);
+  if (!session) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  const data = ctx.callbackQuery?.data ?? "";
+  const answerIdx = parseInt(data.slice("quiz_answer:".length), 10);
+  const isCorrect = answerIdx === session.correctIdx;
+
+  const correctTerm = getTerm(session.options[session.correctIdx]);
+
+  if (isCorrect) {
+    await ctx.reply(ctx.t("quiz-correct", { term: correctTerm?.term ?? "" }), {
+      parse_mode: "HTML",
+    });
+  } else {
+    await ctx.reply(ctx.t("quiz-wrong", { term: correctTerm?.term ?? "" }), {
+      parse_mode: "HTML",
+    });
+  }
+
+  // Show the term card
+  if (correctTerm) {
+    const card = formatTermCard(correctTerm, ctx.t.bind(ctx), ctx.session.language || "en");
+    await ctx.reply(card, {
+      parse_mode: "HTML",
+      reply_markup: buildTermKeyboard(correctTerm.id, ctx.t.bind(ctx), userId),
+    });
+  }
+
+  // Clear session
+  db.clearQuizSession(userId);
+  await ctx.answerCallbackQuery();
+}
+
+// ── Feedback ──────────────────────────────────────────────────────────────────
+
+export async function handleFeedbackCallback(ctx: MyContext): Promise<void> {
+  await ctx.answerCallbackQuery({ text: ctx.t("feedback-thanks") });
 }

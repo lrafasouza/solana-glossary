@@ -31,3 +31,62 @@ export function getRandomTerms(n: number): GlossaryTerm[] {
   const shuffled = [...allTerms].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, n);
 }
+
+/** Calculate Levenshtein distance between two strings */
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+/** Find closest term by Levenshtein distance (threshold ≤ 3) */
+export function findClosest(query: string): GlossaryTerm | undefined {
+  const lowerQuery = query.toLowerCase();
+  let bestMatch: GlossaryTerm | undefined;
+  let bestDistance = Infinity;
+
+  for (const term of allTerms) {
+    // Check ID
+    const idDist = levenshteinDistance(lowerQuery, term.id.toLowerCase());
+    if (idDist < bestDistance) {
+      bestDistance = idDist;
+      bestMatch = term;
+    }
+
+    // Check term name
+    const nameDist = levenshteinDistance(lowerQuery, term.term.toLowerCase());
+    if (nameDist < bestDistance) {
+      bestDistance = nameDist;
+      bestMatch = term;
+    }
+
+    // Check aliases
+    for (const alias of term.aliases ?? []) {
+      const aliasDist = levenshteinDistance(lowerQuery, alias.toLowerCase());
+      if (aliasDist < bestDistance) {
+        bestDistance = aliasDist;
+        bestMatch = term;
+      }
+    }
+  }
+
+  return bestDistance <= 3 ? bestMatch : undefined;
+}
