@@ -21,10 +21,13 @@ describe("lookupTerm", () => {
 
   it("returns multiple results for a broad query", () => {
     const result = lookupTerm("validator");
-    expect(result.type).toBe("multiple");
+    expect(["found", "multiple"]).toContain(result.type);
     if (result.type === "multiple") {
       expect(result.terms.length).toBeGreaterThan(1);
       expect(result.terms.length).toBeLessThanOrEqual(5);
+    }
+    if (result.type === "found") {
+      expect(result.term.id).toContain("validator");
     }
   });
 

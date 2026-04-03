@@ -10,7 +10,7 @@ describe("languageCommand", () => {
     expect(ctx.session.language).toBe("pt");
     expect(ctx.reply).toHaveBeenCalledOnce();
     const [text] = (ctx.reply as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(text).toBe("[language-changed]");
+    expect(text).toContain("Idioma alterado para português.");
   });
 
   it("rejects invalid language codes", async () => {

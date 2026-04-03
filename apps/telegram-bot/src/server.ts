@@ -49,7 +49,7 @@ async function setCommands() {
         { command: "aleatorio", description: "Término aleatorio" },
         { command: "categorias", description: "Explorar las 14 categorías" },
         { command: "terminodelhoy", description: "Término del día" },
-        { command: "quiz", description: "Iniciar quiz" },
+        { command: "quiz", description: "Iniciar cuestionario" },
         { command: "favoritos", description: "Mis términos guardados" },
         { command: "historial", description: "Términos vistos recientemente" },
         { command: "streak", description: "Ver tu racha de quizzes" },
@@ -96,10 +96,8 @@ async function setCommands() {
 }
 
 async function start() {
-  // Start notification scheduler for streak reminders
   startNotificationScheduler(bot);
 
-  // Set chat menu button to show commands menu
   try {
     await bot.api.setChatMenuButton({
       menu_button: { type: "commands" },
@@ -110,11 +108,10 @@ async function start() {
   }
 
   if (config.isProduction) {
-    // Webhook mode — used on Railway
+    // Webhook mode used on Railway.
     const app = express();
     app.use(express.json());
 
-    // Health check endpoint for Railway
     app.get("/", (req, res) => {
       res.status(200).json({ status: "ok", service: "solana-glossary-bot" });
     });
@@ -128,7 +125,7 @@ async function start() {
     await bot.api.setWebhook(`${config.webhookDomain}/webhook`);
     console.log(`Webhook set to ${config.webhookDomain}/webhook`);
   } else {
-    // Long polling — used locally
+    // Long polling mode used locally.
     console.log("Starting bot in long polling mode...");
     await bot.start({
       onStart: (info) => console.log(`Bot @${info.username} started`),

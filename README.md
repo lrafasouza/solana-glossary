@@ -1,232 +1,383 @@
-# @stbr/solana-glossary
+# Solana Glossary Telegram Bot
 
-[![npm version](https://img.shields.io/npm/v/@stbr/solana-glossary)](https://www.npmjs.com/package/@stbr/solana-glossary)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Terms](https://img.shields.io/badge/terms-1001-brightgreen)
-![Categories](https://img.shields.io/badge/categories-14-blue)
+A multilingual Telegram bot that turns the Solana Glossary into a fast, conversational learning tool for developers, learners, and ecosystem users.
 
-**The most comprehensive Solana glossary ever built — 1001 terms, 14 categories, full cross-references, and i18n support. Packaged as an SDK.**
+It makes Solana terminology easier to search, revisit, and retain through Telegram-native flows like free-text search, category exploration, daily learning, quiz mode, favorites, history, streaks, and leaderboard mechanics.
 
----
+## Live Demo
 
-## Why This Exists
+- Live health endpoint: `https://solana-glossary-production.up.railway.app/`
+- Deployment: Railway
+- Runtime: Telegram webhook bot
 
-The original Solana Glossary was one of the most loved resources in the ecosystem — a single place where any developer could look up unfamiliar Solana concepts and immediately get context.
+## Why this project exists
 
-Over time, it got absorbed into generic "Terminology" docs and lost its identity.
+Most glossary products are passive. You open a page, search once, read a definition, and leave.
 
-**Superteam Brazil is bringing it back** — expanded from ~200 terms to 1001, structured as a proper npm package, and designed to actually ship value:
+This project turns the Solana Glossary into an active learning product:
 
-- **Onboarding** — New devs get instant context on 1001 Solana concepts
-- **Go deeper** — Seasoned devs explore cross-referenced technical relationships between terms
-- **Vibe coders** — AI-assisted builders can understand what's behind the abstractions
-- **Save tokens** — Feed glossary context to LLMs instead of burning tokens re-explaining Solana concepts every prompt
+- faster access inside Telegram
+- repeated learning through daily usage
+- lightweight retention loops through quiz and streaks
+- multilingual onboarding for `pt`, `en`, and `es`
+- portable live demo that can be used immediately
 
----
+The goal is not just to expose glossary data, but to make the data genuinely useful in a daily developer workflow.
 
-## Install
+## What it does
+
+- Search terms with `/glossary`, `/glossario`, `/glosario`
+- Search through free-text DMs
+- Browse glossary categories
+- Use inline mode in any Telegram chat
+- Learn with a daily term flow
+- Test knowledge with multiple-choice quizzes
+- Save favorite terms
+- Review recently viewed terms
+- Track streaks and rank on a leaderboard
+- Switch language between Portuguese, English, and Spanish
+
+## Why it matters
+
+This bot solves a real discovery and retention problem:
+
+- new developers can learn Solana concepts without leaving Telegram
+- experienced devs can quickly clarify specific terms while chatting or building
+- communities can share terms and use inline mode as a lightweight learning primitive
+- multilingual support lowers the barrier for LATAM users
+
+That makes it more than a thin wrapper. It is a glossary-powered learning surface with retention mechanics.
+
+## Glossary SDK / Data Integration
+
+This project is built on top of the official Solana Glossary data layer.
+
+Source of truth:
+
+- `data/terms/*.json`
+- glossary i18n data used for localized term content
+
+To make deployment reliable on Railway, the bot vendors a deployable snapshot of the official glossary dataset inside the app:
+
+- `apps/telegram-bot/src/glossary/index.ts`
+- `apps/telegram-bot/src/glossary/types.ts`
+- `apps/telegram-bot/src/glossary/data/`
+
+This keeps the project compliant with the campaign rule requiring usage of `@stbr/solana-glossary` or its official data files, while also making the deployment standalone and production-friendly.
+
+## User Experience
+
+### Search and learn
+
+- User sends `/glossary proof-of-history`
+- Bot returns a formatted glossary card
+- User can jump to related terms from inline buttons
+
+### Explore by category
+
+- User opens `/categories`
+- Bot lists the glossary categories
+- User navigates paginated category term lists
+
+### Daily learning
+
+- User runs `/termofday`
+- Bot returns the daily term
+- Repeated visits create a learning rhythm
+
+### Quiz and retention
+
+- User starts `/quiz`
+- Bot shows a multiple-choice question
+- Correct answers advance streaks and leaderboard position
+
+### Personal knowledge memory
+
+- Favorites keep important terms handy
+- History makes it easy to revisit previously seen terms
+- Leaderboard adds a lightweight social loop
+
+## Commands
+
+### English
+
+- `/start`
+- `/glossary <term>`
+- `/random`
+- `/categories`
+- `/termofday`
+- `/quiz`
+- `/favorites`
+- `/history`
+- `/streak`
+- `/leaderboard`
+- `/rank`
+- `/language pt|en|es`
+- `/help`
+
+### Portuguese
+
+- `/start`
+- `/glossario <termo>`
+- `/aleatorio`
+- `/categorias`
+- `/termododia`
+- `/quiz`
+- `/favoritos`
+- `/historico`
+- `/streak`
+- `/leaderboard`
+- `/posicao`
+- `/idioma pt|en|es`
+- `/help`
+
+### Spanish
+
+- `/start`
+- `/glosario <termino>`
+- `/aleatorio`
+- `/categorias`
+- `/terminodelhoy`
+- `/quiz`
+- `/favoritos`
+- `/historial`
+- `/streak`
+- `/leaderboard`
+- `/idioma pt|en|es`
+- `/help`
+
+## Screenshots / Assets
+
+Current asset included in the repo:
+
+- `apps/telegram-bot/assets/chooselangugage.png`
+
+![Language picker](./apps/telegram-bot/assets/chooselangugage.png)
+
+Recommended final submission additions:
+
+- onboarding screenshot
+- glossary lookup screenshot
+- category browser screenshot
+- quiz screenshot
+- leaderboard screenshot
+
+## Architecture
+
+Main app path:
+
+- `apps/telegram-bot`
+
+Key files:
+
+- `apps/telegram-bot/src/server.ts` for webhook server and production startup
+- `apps/telegram-bot/src/bot.ts` for middleware, commands, callbacks, and inline mode
+- `apps/telegram-bot/src/glossary/index.ts` for glossary lookup and search
+- `apps/telegram-bot/src/db/index.ts` for SQLite persistence
+- `apps/telegram-bot/src/scheduler/notifications.ts` for reminder scheduling
+
+High-level structure:
+
+```text
+apps/telegram-bot/
+├─ src/
+│  ├─ bot.ts
+│  ├─ server.ts
+│  ├─ commands/
+│  ├─ handlers/
+│  ├─ i18n/
+│  ├─ glossary/
+│  ├─ db/
+│  ├─ scheduler/
+│  └─ utils/
+├─ tests/
+├─ assets/
+├─ package.json
+├─ package-lock.json
+├─ railpack.toml
+└─ nixpacks.toml
+```
+
+## Internationalization
+
+Supported languages:
+
+- Portuguese
+- English
+- Spanish
+
+Locale files:
+
+- `apps/telegram-bot/src/i18n/locales/en.ftl`
+- `apps/telegram-bot/src/i18n/locales/pt.ftl`
+- `apps/telegram-bot/src/i18n/locales/es.ftl`
+
+This directly supports one of the campaign bonus factors: high-quality i18n.
+
+## Local Development
+
+### Requirements
+
+- Node.js 22+
+- Telegram bot token from `@BotFather`
+
+### Environment
+
+Reference:
+
+- `apps/telegram-bot/.env.example`
+
+Example:
+
+```env
+BOT_TOKEN=your_bot_token
+WEBHOOK_DOMAIN=
+PORT=3000
+```
+
+For local development, leave `WEBHOOK_DOMAIN` empty. The app will use long polling instead of webhook mode.
+
+### Install
 
 ```bash
-npm i @stbr/solana-glossary
+cd apps/telegram-bot
+npm install
 ```
+
+### Run in development
 
 ```bash
-pnpm add @stbr/solana-glossary
+npm run dev
 ```
+
+### Build
 
 ```bash
-yarn add @stbr/solana-glossary
+npm run build
 ```
 
----
-
-## Quick Start
-
-```typescript
-import { getTerm, searchTerms, getTermsByCategory, allTerms } from "@stbr/solana-glossary";
-
-// Look up a term by ID
-const poh = getTerm("proof-of-history");
-console.log(poh?.definition);
-
-// Look up by alias
-const same = getTerm("PoH"); // Same result
-
-// Search across names, definitions, and aliases
-const results = searchTerms("account");
-
-// Get all terms in a category
-const defiTerms = getTermsByCategory("defi");
-
-// Access everything
-console.log(`${allTerms.length} terms loaded`); // 1001
-```
-
----
-
-## API Reference
-
-### `getTerm(idOrAlias: string): GlossaryTerm | undefined`
-
-Look up a term by its exact ID or any of its aliases (case-insensitive for aliases).
-
-```typescript
-getTerm("pda");           // by ID
-getTerm("PDA");           // by alias → same term
-getTerm("nonexistent");   // undefined
-```
-
-### `searchTerms(query: string): GlossaryTerm[]`
-
-Full-text search across term names, definitions, IDs, and aliases. Case-insensitive.
-
-```typescript
-searchTerms("proof of history"); // finds PoH and related terms
-searchTerms("AMM");              // finds AMM-related terms
-```
-
-### `getTermsByCategory(category: Category): GlossaryTerm[]`
-
-Get all terms belonging to a specific category.
-
-```typescript
-getTermsByCategory("defi");           // 135 terms
-getTermsByCategory("core-protocol");  // 86 terms
-```
-
-### `getCategories(): Category[]`
-
-Returns all 14 category identifiers.
-
-### `allTerms: GlossaryTerm[]`
-
-The complete array of all 1001 terms. Useful for building custom indexes or feeding to LLMs.
-
----
-
-## Categories
-
-| Category | Terms | Description |
-|----------|-------|-------------|
-| `core-protocol` | 86 | Consensus, PoH, validators, slots, epochs |
-| `programming-model` | 69 | Accounts, instructions, programs, PDAs |
-| `token-ecosystem` | 59 | SPL tokens, Token-2022, metadata, NFTs |
-| `defi` | 135 | AMMs, liquidity pools, lending protocols |
-| `zk-compression` | 34 | ZK proofs, compressed accounts, Light Protocol |
-| `infrastructure` | 44 | RPC, validators, staking, snapshots |
-| `security` | 48 | Attack vectors, audit practices, reentrancy |
-| `dev-tools` | 64 | Anchor, Solana CLI, explorers, testing |
-| `network` | 58 | Mainnet, devnet, testnet, cluster config |
-| `blockchain-general` | 84 | Shared blockchain concepts |
-| `web3` | 80 | Wallets, dApps, signing, key management |
-| `programming-fundamentals` | 47 | Data structures, serialization, Borsh |
-| `ai-ml` | 55 | AI agents, inference on-chain, model integration |
-| `solana-ecosystem` | 138 | Projects, protocols, and tooling |
-
----
-
-## i18n
-
-The glossary ships with internationalization support. Translations override `term` and `definition` while keeping all structural fields (`id`, `category`, `related`, `aliases`) in English.
-
-```typescript
-import { getLocalizedTerms } from "@stbr/solana-glossary/i18n";
-
-const ptTerms = getLocalizedTerms("pt"); // Portuguese
-const esTerms = getLocalizedTerms("es"); // Spanish
-```
-
-**Available locales**: `pt` (Portuguese), `es` (Spanish)
-
-Terms without a translation automatically fall back to English.
-
-### Translation file format
-
-`data/i18n/<locale>.json`:
-
-```json
-{
-  "proof-of-history": {
-    "term": "Prova de História (PoH)",
-    "definition": "Um mecanismo de relógio criptográfico que..."
-  }
-}
-```
-
----
-
-## Term Schema
-
-```typescript
-interface GlossaryTerm {
-  id: string;          // URL-safe kebab-case identifier
-  term: string;        // Display name
-  definition: string;  // Plain-text definition (1-3 sentences)
-  category: Category;  // One of 14 categories
-  related?: string[];  // Cross-reference IDs
-  aliases?: string[];  // Abbreviations and alternate names
-}
-```
-
----
-
-## Use Cases
-
-### Feed context to LLMs
-
-```typescript
-import { getTermsByCategory } from "@stbr/solana-glossary";
-
-const context = getTermsByCategory("defi")
-  .map(t => `${t.term}: ${t.definition}`)
-  .join("\n");
-
-// Add to your system prompt — no more wasting tokens explaining basics
-```
-
-### Build a search index
-
-```typescript
-import { allTerms } from "@stbr/solana-glossary";
-
-// Feed into Algolia, MeiliSearch, or any search engine
-const searchDocs = allTerms.map(t => ({
-  objectID: t.id,
-  title: t.term,
-  content: t.definition,
-  category: t.category,
-  tags: t.aliases ?? [],
-}));
-```
-
-### Onboarding tooltips
-
-```typescript
-import { getTerm } from "@stbr/solana-glossary";
-
-// In your UI component
-const tooltip = getTerm("pda")?.definition;
-```
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on adding terms, translations, and submitting PRs.
+### Start production build locally
 
 ```bash
-npm test        # Run tests
-npm run build   # Build package
-npm run lint    # Type check
-npm run validate # Check data integrity
+npm start
 ```
 
----
+### Tests
 
-## License
+```bash
+npm test
+```
 
-MIT. See [LICENSE](LICENSE).
+## Railway Deployment
 
----
+Recommended Railway service configuration:
 
-Built with care by [Superteam Brazil](https://twitter.com/SuperteamBR).
+- Root Directory: `apps/telegram-bot`
+- Builder: `Railpack`
+- Build Command: `npm install && npm run build`
+- Start Command: `node dist/server.js`
+- Public Port: `8080`
+- Healthcheck Path: `/`
+
+Required environment variables:
+
+```env
+BOT_TOKEN=your_telegram_bot_token
+WEBHOOK_DOMAIN=https://your-service.up.railway.app
+```
+
+Notes:
+
+- Do not append `/webhook` to `WEBHOOK_DOMAIN`
+- Railway provides `PORT` automatically
+- The app sets the Telegram webhook to `${WEBHOOK_DOMAIN}/webhook`
+
+## Persistence Notes
+
+The bot currently uses SQLite for:
+
+- favorites
+- history
+- quiz sessions
+- streaks
+- scheduled notifications
+
+Default local database path:
+
+- `data/bot.db`
+
+Optional override:
+
+```env
+BOT_DB_PATH=/app/data/bot.db
+```
+
+Important production note:
+
+- Railway containers are ephemeral by default
+- without persistent storage, user progress may be lost on restart or redeploy
+
+For a stronger production setup, mount persistent storage or migrate state to Postgres.
+
+## Tech Stack
+
+- TypeScript
+- Node.js
+- grammY
+- @grammyjs/i18n
+- Express
+- better-sqlite3
+- node-cron
+- Railway
+
+## Judging Criteria Positioning
+
+### Usefulness & Impact
+
+This bot solves a real onboarding and recall problem for Solana developers and learners by placing glossary access directly inside Telegram.
+
+### Quality & Polish
+
+The project includes:
+
+- live deployed demo
+- multilingual support
+- webhook deployment
+- category navigation
+- quiz flow
+- user memory features like favorites and history
+
+### Creativity
+
+Instead of a static glossary browser, this submission turns the dataset into a conversational learning and retention product with daily terms, quiz loops, streaks, and leaderboard dynamics.
+
+### SDK / Data Integration
+
+The implementation is directly grounded in the official Solana Glossary data layer and localized glossary content.
+
+### Documentation
+
+This root README is intended to be the complete submission entry point.
+
+## Known Limitations
+
+- SQLite persistence is not durable on Railway without extra storage
+- two automated tests are currently out of sync with current runtime behavior
+- some source strings still need encoding cleanup
+- the live HTTP endpoint is a health surface, not a browser UI
+
+## Next Improvements
+
+- add persistent storage
+- update the remaining failing tests
+- add richer screenshots and a short demo video
+- improve timezone-aware scheduling
+- polish remaining text encoding issues
+
+## Repository Notes
+
+This repository also contains the underlying glossary dataset and supporting code used by the bot. The submission itself is the Telegram bot experience implemented under `apps/telegram-bot`.
+
+## License / Attribution
+
+This project builds on the Solana Glossary dataset and localized content from the parent glossary repository.
