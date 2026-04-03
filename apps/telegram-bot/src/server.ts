@@ -3,6 +3,7 @@ import express from "express";
 import { webhookCallback } from "grammy";
 import { bot } from "./bot.js";
 import { config } from "./config.js";
+import { startNotificationScheduler } from "./scheduler/notifications.js";
 
 async function setCommands() {
   const commandSets = [
@@ -17,6 +18,8 @@ async function setCommands() {
         { command: "quiz", description: "Iniciar quiz" },
         { command: "favoritos", description: "Meus termos salvos" },
         { command: "historico", description: "Últimos termos vistos" },
+        { command: "streak", description: "Ver seu streak de quizzes" },
+        { command: "leaderboard", description: "Ranking global" },
         { command: "idioma", description: "Trocar idioma (pt, en, es)" },
         { command: "help", description: "Ver todos os comandos" },
       ],
@@ -32,6 +35,8 @@ async function setCommands() {
         { command: "quiz", description: "Start quiz" },
         { command: "favorites", description: "Saved terms" },
         { command: "history", description: "Recently viewed terms" },
+        { command: "streak", description: "View your quiz streak" },
+        { command: "leaderboard", description: "Global ranking" },
         { command: "language", description: "Change language (pt, en, es)" },
         { command: "help", description: "Show all commands" },
       ],
@@ -47,6 +52,8 @@ async function setCommands() {
         { command: "quiz", description: "Iniciar quiz" },
         { command: "favoritos", description: "Mis términos guardados" },
         { command: "historial", description: "Términos vistos recientemente" },
+        { command: "streak", description: "Ver tu racha de quizzes" },
+        { command: "leaderboard", description: "Ranking global" },
         { command: "idioma", description: "Cambiar idioma (pt, en, es)" },
         { command: "help", description: "Ver todos los comandos" },
       ],
@@ -62,6 +69,8 @@ async function setCommands() {
         { command: "quiz", description: "Start quiz" },
         { command: "favorites", description: "Saved terms" },
         { command: "history", description: "Recently viewed terms" },
+        { command: "streak", description: "View your quiz streak" },
+        { command: "leaderboard", description: "Global ranking" },
         { command: "language", description: "Change language (pt, en, es)" },
         { command: "help", description: "Show all commands" },
       ],
@@ -87,6 +96,9 @@ async function setCommands() {
 }
 
 async function start() {
+  // Start notification scheduler for streak reminders
+  startNotificationScheduler(bot);
+
   // Set chat menu button to show commands menu
   try {
     await bot.api.setChatMenuButton({

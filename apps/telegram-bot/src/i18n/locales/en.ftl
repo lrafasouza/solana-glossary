@@ -23,6 +23,8 @@ help-message =
     /quiz — start quiz
     /favorites — saved terms
     /history — recently viewed terms
+    /streak — view your streak
+    /leaderboard — global ranking
 
     🌐 <b>Language:</b>
     /language pt|en|es — change language
@@ -54,6 +56,16 @@ quiz-option-b = B) { $term }
 quiz-option-c = C) { $term }
 quiz-option-d = D) { $term }
 quiz-correct = ✅ <b>Correct!</b> It was <b>{ $term }</b>.
+quiz-correct-with-streak =
+    ✅ <b>Correct!</b> It was <b>{ $term }</b>.
+
+    🔥 Streak: <b>{ $current }</b> days
+quiz-correct-new-record =
+    ✅ <b>Correct!</b> It was <b>{ $term }</b>.
+
+    🎉 <b>New record!</b> { $max } days!
+
+    🔥 Streak: <b>{ $max }</b> days
 quiz-wrong = ❌ <b>Wrong.</b> The answer was <b>{ $term }</b>.
 quiz-wrong-retry =
     ❌ <b>Not quite right!</b>
@@ -83,6 +95,35 @@ history-empty = You haven't looked up any terms yet.
 streak-day = 🔥 { $count } day streak
 streak-days = 🔥 { $count } day streak
 streak-first = 🔥 First day!
+streak-message =
+    { $fire } <b>Your Streak</b>
+
+    🔥 Current: <b>{ $current }</b> days
+    🏆 Best: <b>{ $max }</b> days
+    ❄️ Freezes: <b>{ $freezes }</b>/1 remaining
+
+    📅 Last 7 days:
+    { $calendar }
+streak-no-user = ❌ User required to view streak.
+
+# Notifications
+notification-streak-warning = 🔥 Streak Alert! You have 2 hours to take the /quiz and keep your { $streak } day streak.
+
+# Quiz streak messages
+quiz-new-record = 🎉 <b>New record!</b> { $max } days!
+quiz-streak-continued = 🔥 Streak: <b>{ $current }</b> days
+
+# Leaderboard
+leaderboard-title = 🏆 <b>Global Ranking — Top 10</b>
+leaderboard-empty = 🏆 No participants yet. Be the first to complete quizzes!
+rank-no-user = ❌ User required to view rank.
+rank-no-streak = You don't have a streak yet. Take a /quiz to start!
+rank-position = 📊 <b>Your rank:</b> #{ $rank } of { $total } participants
+rank-max-streak = 🔥 Your best: { $max } days
+rank-you = → <b>You</b>
+leaderboard-entry = { $medal } { $name } — { $streak } days
+rank-entry-simple = { $rank } — { $streak } days
+rank-nearby = 📈 Nearby competitors:
 
 # Did you mean
 did-you-mean =

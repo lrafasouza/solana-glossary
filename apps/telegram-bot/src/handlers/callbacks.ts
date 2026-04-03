@@ -199,9 +199,28 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
   const correctTerm = getTerm(session.options[session.correctIdx]);
 
   if (isCorrect) {
-    await ctx.reply(ctx.t("quiz-correct", { term: correctTerm?.term ?? "" }), {
-      parse_mode: "HTML",
-    });
+    // Increment streak on correct answer
+    const streak = db.incrementStreak(userId);
+
+    // Send appropriate message based on streak state
+    if (streak.isNewRecord) {
+      await ctx.reply(ctx.t("quiz-correct-new-record", { term: correctTerm?.term ?? "", max: streak.max }), {
+        parse_mode: "HTML",
+      });
+    } else if (streak.current > 1) {
+      await ctx.reply(ctx.t("quiz-correct-with-streak", { term: correctTerm?.term ?? "", current: streak.current }), {
+        parse_mode: "HTML",
+      });
+    } else {
+      await ctx.reply(ctx.t("quiz-correct", { term: correctTerm?.term ?? "" }), {
+        parse_mode: "HTML",
+      });
+    }
+
+    // Schedule streak warning for tomorrow (2h before midnight)
+    const { scheduleStreakWarning } = await import("../scheduler/notifications.js");
+    scheduleStreakWarning(userId);
+
     // Show the term card
     if (correctTerm) {
       const card = formatTermCard(correctTerm, ctx.t.bind(ctx), ctx.session.language || "en");

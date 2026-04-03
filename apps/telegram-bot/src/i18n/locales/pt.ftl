@@ -23,6 +23,8 @@ help-message =
     /quiz — iniciar quiz
     /favoritos — meus termos salvos
     /historico — últimos termos vistos
+    /streak — ver seu streak
+    /leaderboard — ranking global
 
     🌐 <b>Idioma:</b>
     /idioma pt|en|es — trocar idioma
@@ -54,7 +56,16 @@ quiz-option-b = B) { $term }
 quiz-option-c = C) { $term }
 quiz-option-d = D) { $term }
 quiz-correct = ✅ <b>Correto!</b> Era <b>{ $term }</b>.
-quiz-wrong = ❌ <b>Errado.</b> A resposta era <b>{ $term }</b>.
+quiz-correct-with-streak =
+    ✅ <b>Correto!</b> Era <b>{ $term }</b>.
+
+    🔥 Streak: <b>{ $current }</b> dias
+quiz-correct-new-record =
+    ✅ <b>Correto!</b> Era <b>{ $term }</b>.
+
+    🎉 <b>Novo recorde!</b> { $max } dias!
+
+    🔥 Streak: <b>{ $max }</b> dias
 quiz-wrong-retry =
     ❌ <b>Quase lá!</b>
 
@@ -83,6 +94,35 @@ history-empty = Você ainda não consultou nenhum termo.
 streak-day = 🔥 { $count } dia seguido
 streak-days = 🔥 { $count } dias seguidos
 streak-first = 🔥 Primeiro dia!
+streak-message =
+    { $fire } <b>Seu Streak</b>
+
+    🔥 Atual: <b>{ $current }</b> dias
+    🏆 Recorde: <b>{ $max }</b> dias
+    ❄️ Congelamentos: <b>{ $freezes }</b>/1 restante
+
+    📅 Últimos 7 dias:
+    { $calendar }
+streak-no-user = ❌ Necessário usuário para ver streak.
+
+# Notifications
+notification-streak-warning = 🔥 Alerta de Streak! Você tem 2h para fazer o /quiz e manter seu streak.
+
+# Quiz streak messages
+quiz-new-record = 🎉 <b>Novo recorde!</b> { $max } dias!
+quiz-streak-continued = 🔥 Streak: <b>{ $current }</b> dias
+
+# Leaderboard
+leaderboard-title = 🏆 <b>Ranking Global — Top 10</b>
+leaderboard-empty = 🏆 Nenhum participante ainda. Seja o primeiro a fazer quizzes!
+rank-no-user = ❌ Necessário usuário para ver posição.
+rank-no-streak = Você ainda não tem um streak. Faça um /quiz para começar!
+rank-position = 📊 <b>Sua posição:</b> #{ $rank } de { $total } participantes
+rank-max-streak = 🔥 Seu recorde: { $max } dias
+rank-you = → <b>Você</b>
+leaderboard-entry = { $medal } { $name } — { $streak } dias
+rank-entry-simple = { $rank } — { $streak } dias
+rank-nearby = 📈 Competidores próximos:
 
 # Did you mean
 did-you-mean =

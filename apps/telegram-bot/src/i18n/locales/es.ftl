@@ -23,6 +23,8 @@ help-message =
     /quiz — iniciar quiz
     /favoritos — mis términos guardados
     /historial — términos vistos recientemente
+    /streak — ver tu racha
+    /leaderboard — ranking global
 
     🌐 <b>Idioma:</b>
     /idioma pt|en|es — cambiar idioma
@@ -54,6 +56,16 @@ quiz-option-b = B) { $term }
 quiz-option-c = C) { $term }
 quiz-option-d = D) { $term }
 quiz-correct = ✅ <b>¡Correcto!</b> Era <b>{ $term }</b>.
+quiz-correct-with-streak =
+    ✅ <b>¡Correcto!</b> Era <b>{ $term }</b>.
+
+    🔥 Racha: <b>{ $current }</b> días
+quiz-correct-new-record =
+    ✅ <b>¡Correcto!</b> Era <b>{ $term }</b>.
+
+    🎉 <b>¡Nuevo récord!</b> ¡{ $max } días!
+
+    🔥 Racha: <b>{ $max }</b> días
 quiz-wrong = ❌ <b>Incorrecto.</b> La respuesta era <b>{ $term }</b>.
 quiz-wrong-retry =
     ❌ <b>¡Casi!</b>
@@ -83,6 +95,35 @@ history-empty = Aún no has consultado ningún término.
 streak-day = 🔥 { $count } día seguido
 streak-days = 🔥 { $count } días seguidos
 streak-first = 🔥 ¡Primer día!
+streak-message =
+    { $fire } <b>Tu Racha</b>
+
+    🔥 Actual: <b>{ $current }</b> días
+    🏆 Récord: <b>{ $max }</b> días
+    ❄️ Congelamientos: <b>{ $freezes }</b>/1 restante
+
+    📅 Últimos 7 días:
+    { $calendar }
+streak-no-user = ❌ Se requiere usuario para ver racha.
+
+# Notifications
+notification-streak-warning = 🔥 ¡Alerta de Racha! Tienes 2 horas para hacer el /quiz y mantener tus { $streak } días.
+
+# Quiz streak messages
+quiz-new-record = 🎉 <b>¡Nuevo récord!</b> ¡{ $max } días!
+quiz-streak-continued = 🔥 Racha: <b>{ $current }</b> días
+
+# Leaderboard
+leaderboard-title = 🏆 <b>Ranking Global — Top 10</b>
+leaderboard-empty = 🏆 Aún no hay participantes. ¡Sé el primero en completar quizzes!
+rank-no-user = ❌ Se requiere usuario para ver posición.
+rank-no-streak = Aún no tienes una racha. ¡Haz un /quiz para empezar!
+rank-position = 📊 <b>Tu posición:</b> #{ $rank } de { $total } participantes
+rank-max-streak = 🔥 Tu mejor: { $max } días
+rank-you = → <b>Tú</b>
+leaderboard-entry = { $medal } { $name } — { $streak } días
+rank-entry-simple = { $rank } — { $streak } días
+rank-nearby = 📈 Competidores cercanos:
 
 # Did you mean
 did-you-mean =

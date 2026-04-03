@@ -4,6 +4,7 @@ import { autoRetry } from "@grammyjs/auto-retry";
 import { limit } from "@grammyjs/ratelimiter";
 import { config } from "./config.js";
 import { i18n } from "./i18n/index.js";
+import { db } from "./db/index.js";
 import type { MyContext, SessionData } from "./context.js";
 
 // Commands
@@ -17,6 +18,8 @@ import { randomTermCommand } from "./commands/random.js";
 import { quizCommand } from "./commands/quiz.js";
 import { favoritesCommand } from "./commands/favorites.js";
 import { historyCommand } from "./commands/history.js";
+import { streakCommand } from "./commands/streak.js";
+import { leaderboardCommand, rankCommand } from "./commands/leaderboard.js";
 
 // Handlers
 import {
@@ -66,6 +69,16 @@ bot.use(
   })
 );
 
+// 5. Save user first_name for leaderboard
+bot.use(async (ctx, next) => {
+  const userId = ctx.from?.id;
+  const firstName = ctx.from?.first_name;
+  if (userId && firstName) {
+    db.setFirstName(userId, firstName);
+  }
+  return next();
+});
+
 // ── Commands ──────────────────────────────────────────────────────────────────
 
 bot.command("start", startCommand);
@@ -80,6 +93,9 @@ bot.command(["aleatorio", "random"], randomTermCommand);
 bot.command(["quiz"], quizCommand);
 bot.command(["favoritos", "favorites"], favoritesCommand);
 bot.command(["historico", "history", "historial"], historyCommand);
+bot.command(["streak", "sequencia"], streakCommand);
+bot.command(["leaderboard", "ranking"], leaderboardCommand);
+bot.command(["rank", "posicao"], rankCommand);
 
 // ── Callback queries ──────────────────────────────────────────────────────────
 
