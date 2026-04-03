@@ -9,5 +9,5 @@ Images hosted on GitHub and served via raw.githubusercontent.com
 
 ## URLs After Upload
 
-- Language Picker: `https://raw.githubusercontent.com/solanabr/solana-glossary/main/apps/telegram-bot/assets/chooselangugage.png`
-- Welcome Banner: `https://raw.githubusercontent.com/solanabr/solana-glossary/main/apps/telegram-bot/assets/welcome-banner.png`
+- Language Picker: `https://raw.githubusercontent.com/lrafasouza/solana-glossary/main/apps/telegram-bot/assets/chooselangugage.png`
+- Welcome Banner: `https://raw.githubusercontent.com/lrafasouza/solana-glossary/main/apps/telegram-bot/assets/welcome-banner.png`

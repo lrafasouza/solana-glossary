@@ -13,7 +13,7 @@ export const config = {
 };
 
 // Image assets hosted on GitHub
-export const ASSETS_BASE_URL = "https://raw.githubusercontent.com/solanabr/solana-glossary/main/apps/telegram-bot/assets";
+export const ASSETS_BASE_URL = "https://raw.githubusercontent.com/lrafasouza/solana-glossary/main/apps/telegram-bot/assets";
 
 export const IMAGES = {
   languagePicker: `${ASSETS_BASE_URL}/chooselangugage.png`,
