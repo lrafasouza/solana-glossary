@@ -149,7 +149,12 @@ export function getTermLocalized(
   locale: "pt" | "en" | "es"
 ): { term: string; definition: string }
 ```
-Loads `data/i18n/pt.json` and `data/i18n/es.json` at module init. Falls back to English fields.
+Loads `data/i18n/pt.json` and `data/i18n/es.json` at module init.
+
+**Fallback rules:**
+- `locale = "en"` → always use original `GlossaryTerm.term` / `GlossaryTerm.definition`
+- `locale = "pt"` → use `pt.json[id]` if present; otherwise fall back to English fields
+- `locale = "es"` → use `es.json[id]` if present; otherwise fall back to English fields
 
 **`formatTermCard` updated:**
 ```ts
@@ -248,13 +253,17 @@ random-term-header = Término aleatorio   # es
 
 **Flow:**
 1. User sends `/quiz`
-2. Bot picks a random term with a non-empty definition
-3. Bot builds 4 options: the correct term name + 3 other terms from the **same category**
-4. Shows definition snippet (first 200 chars) + 4 inline buttons labeled A/B/C/D
-5. Saves quiz session to SQLite (`quiz_sessions` table)
-6. User taps an option → `handleQuizAnswerCallback`
-7. If correct: ✅ message + card of the term + streak increment
-8. If wrong: ❌ message revealing the correct answer + card
+2. If an active quiz session already exists → overwrite it with a new question (no error)
+3. Bot picks a random term with a non-empty definition
+4. Bot builds 4 options: the correct term name + 3 other terms from the **same category**
+5. Shows definition snippet (first 200 chars) + 4 inline buttons labeled A/B/C/D
+6. Saves quiz session to SQLite (`quiz_sessions` table)
+7. User taps an option → `handleQuizAnswerCallback`
+8. Handler clears the quiz session immediately after reading it
+9. If correct: ✅ message + card of the term
+10. If wrong: ❌ message revealing the correct answer + card
+
+**Session lifecycle:** Session is created on `/quiz` and deleted immediately after the user answers. No timeout needed — a new `/quiz` simply overwrites any existing session. Stale sessions from abandoned quizzes are harmless (overwritten on next `/quiz`).
 
 **Callback data:** `quiz_answer:<optionIdx>` (0-3)
 
@@ -424,13 +433,11 @@ history-empty = Aún no has consultado ningún término.   # es
 
 ### 3c. External Links in Term Card
 
-Add a `🔗 Ver mais` section at the bottom of each term card with links to:
-- Solana Docs search: `https://solana.com/docs` (generic, no per-term URL available)
-- Solana FM: `https://solana.fm` (for infrastructure/network terms)
+The Solana docs terminology page (`https://solana.com/docs/terminology`) has per-term HTML anchors in kebab-case format matching our term IDs (e.g. `#proof-of-history-poh`, `#account`, `#cluster`).
 
-**Implementation:** `formatTermCard` appends a plain-text line with HTML anchor tags when `term.category` is one of `["core-protocol", "infrastructure", "network", "defi"]`.
+**Strategy:** Show a docs link only for terms in `core-protocol` category, using `https://solana.com/docs/terminology#${term.id}` as a best-effort anchor. If the anchor doesn't exist on their page, the browser lands at the top of the terminology page — still useful.
 
-Since Telegram HTML mode doesn't support arbitrary `<a>` tags in messages (only inline URLs via `parse_mode: "HTML"` with `<a href="...">text</a>`), this renders as a clickable link inside the message body.
+**Implementation:** `formatTermCard` appends a link line when `term.category === "core-protocol"`. Telegram `parse_mode: "HTML"` supports `<a href="...">text</a>` inline.
 
 **i18n keys:**
 ```
@@ -530,7 +537,7 @@ feedback-thanks = ¡Gracias por tu opinión!  # es
 | `src/commands/categories.ts` | `sendCategoryTerms(ctx, category, page, editMessage)` |
 | `src/commands/start.ts` | Send onboarding tips after welcome |
 | `src/commands/daily.ts` | Call `db.viewDailyTerm`, show streak badge |
-| `src/handlers/callbacks.ts` | `handleCatPageCallback`, `handleFavAddCallback`, `handleFavRemoveCallback`, `handleQuizAnswerCallback`, `handleFeedbackCallback`, `handleBrowseCatCallback` + validation |
+| `src/handlers/callbacks.ts` | `handleCatPageCallback` (new), `handleFavAddCallback` (new), `handleFavRemoveCallback` (new), `handleQuizAnswerCallback` (new), `handleFeedbackCallback` (new); `handleBrowseCatCallback` already exists — add category validation |
 | `src/bot.ts` | Register all new commands + callbacks; init DB |
 | `src/server.ts` | Init SQLite DB before bot starts |
 | `src/i18n/locales/pt.ftl` | All new keys |
