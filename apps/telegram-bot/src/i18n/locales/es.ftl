@@ -55,6 +55,14 @@ quiz-option-c = C) { $term }
 quiz-option-d = D) { $term }
 quiz-correct = ✅ <b>¡Correcto!</b> Era <b>{ $term }</b>.
 quiz-wrong = ❌ <b>Incorrecto.</b> La respuesta era <b>{ $term }</b>.
+quiz-wrong-retry =
+    ❌ <b>¡Casi!</b>
+
+    ¿Qué quieres hacer?
+quiz-btn-retry = 🔄 Intentar de Nuevo
+quiz-btn-result = 📖 Ver Respuesta
+quiz-try-again = 🔄 ¡Intentémoslo de nuevo!
+quiz-result = 📖 La respuesta correcta es <b>{ $term }</b>.
 quiz-no-session = ❌ No hay quiz activo. Usa /quiz para comenzar.
 quiz-no-user = ❌ Usuario requerido para quiz.
 
@@ -84,7 +92,7 @@ did-you-mean =
 btn-did-you-mean = Sí, mostrar →
 
 # External links
-term-read-more = 🔗 <a href="{ $url }">Ver documentación Solana</a>
+term-read-more-label = Ver documentación Solana
 
 # Onboarding
 onboarding-tips =

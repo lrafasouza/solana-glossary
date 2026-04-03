@@ -5,8 +5,8 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "build": "tsc && cp -r src/i18n/locales dist/i18n/",
     "start": "node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest"

@@ -74,7 +74,7 @@ export function formatTermCard(
   // External links for specific categories
   if (DOCS_LINK_CATEGORIES.has(term.category)) {
     const docsUrl = `https://solana.com/docs/terminology#${term.id}`;
-    lines.push("", t("term-read-more", { url: docsUrl }));
+    lines.push("", `🔗 <a href="${docsUrl}">${t("term-read-more-label")}</a>`);
   }
 
   return lines.join("\n");

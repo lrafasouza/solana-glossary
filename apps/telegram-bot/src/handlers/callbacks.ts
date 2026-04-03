@@ -1,6 +1,7 @@
 // src/handlers/callbacks.ts
 import { getTerm, getTermsByCategory, getCategories } from "@stbr/solana-glossary";
 import type { Category } from "@stbr/solana-glossary";
+import { InlineKeyboard } from "grammy";
 import { formatTermCard, formatTermList, formatCategoryName } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { sendWelcome } from "../commands/start.js";
@@ -201,11 +202,96 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
     await ctx.reply(ctx.t("quiz-correct", { term: correctTerm?.term ?? "" }), {
       parse_mode: "HTML",
     });
+    // Show the term card
+    if (correctTerm) {
+      const card = formatTermCard(correctTerm, ctx.t.bind(ctx), ctx.session.language || "en");
+      await ctx.reply(card, {
+        parse_mode: "HTML",
+        reply_markup: buildTermKeyboard(correctTerm.id, ctx.t.bind(ctx), userId),
+      });
+    }
+    // Clear session
+    db.clearQuizSession(userId);
   } else {
-    await ctx.reply(ctx.t("quiz-wrong", { term: correctTerm?.term ?? "" }), {
+    // Wrong answer - offer options to retry or see result
+    const keyboard = new InlineKeyboard()
+      .text(ctx.t("quiz-btn-retry"), "quiz_retry")
+      .text(ctx.t("quiz-btn-result"), "quiz_result");
+
+    await ctx.reply(ctx.t("quiz-wrong-retry"), {
       parse_mode: "HTML",
+      reply_markup: keyboard,
     });
+    // Don't clear session yet - user might want to retry
   }
+
+  await ctx.answerCallbackQuery();
+}
+
+export async function handleQuizRetryCallback(ctx: MyContext): Promise<void> {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  const session = db.getQuizSession(userId);
+  if (!session) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  // Get term and rebuild question
+  const targetTerm = getTerm(session.termId);
+  if (!targetTerm) {
+    await ctx.answerCallbackQuery({ text: ctx.t("internal-error"), show_alert: true });
+    return;
+  }
+
+  // Rebuild options from session
+  const options = session.options.map(id => getTerm(id)).filter((t): t is NonNullable<typeof t> => t !== undefined);
+
+  // Show question again
+  const definitionSnippet = targetTerm.definition;
+  const question = ctx.t("quiz-question", { definition: definitionSnippet });
+
+  const keyboard = new InlineKeyboard()
+    .text(ctx.t("quiz-option-a", { term: options[0]?.term ?? "" }), `quiz_answer:0`)
+    .row()
+    .text(ctx.t("quiz-option-b", { term: options[1]?.term ?? "" }), `quiz_answer:1`)
+    .row()
+    .text(ctx.t("quiz-option-c", { term: options[2]?.term ?? "" }), `quiz_answer:2`)
+    .row()
+    .text(ctx.t("quiz-option-d", { term: options[3]?.term ?? "" }), `quiz_answer:3`);
+
+  await ctx.reply(ctx.t("quiz-try-again"), { parse_mode: "HTML" });
+  await ctx.reply(question, {
+    parse_mode: "HTML",
+    reply_markup: keyboard,
+  });
+
+  await ctx.answerCallbackQuery();
+}
+
+export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  const session = db.getQuizSession(userId);
+  if (!session) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  const correctTerm = getTerm(session.options[session.correctIdx]);
+
+  // Show the correct answer
+  await ctx.reply(ctx.t("quiz-result", { term: correctTerm?.term ?? "" }), {
+    parse_mode: "HTML",
+  });
 
   // Show the term card
   if (correctTerm) {

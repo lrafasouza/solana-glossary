@@ -29,6 +29,8 @@ import {
   handleFavAddCallback,
   handleFavRemoveCallback,
   handleQuizAnswerCallback,
+  handleQuizRetryCallback,
+  handleQuizResultCallback,
   handleFeedbackCallback,
 } from "./handlers/callbacks.js";
 import { handleInlineQuery } from "./handlers/inline.js";
@@ -90,6 +92,8 @@ bot.callbackQuery(/^cat_page:/, handleCatPageCallback);
 bot.callbackQuery(/^fav_add:/, handleFavAddCallback);
 bot.callbackQuery(/^fav_remove:/, handleFavRemoveCallback);
 bot.callbackQuery(/^quiz_answer:/, handleQuizAnswerCallback);
+bot.callbackQuery(/^quiz_retry$/, handleQuizRetryCallback);
+bot.callbackQuery(/^quiz_result$/, handleQuizResultCallback);
 bot.callbackQuery(/^feedback:/, handleFeedbackCallback);
 
 // ── Inline mode ───────────────────────────────────────────────────────────────

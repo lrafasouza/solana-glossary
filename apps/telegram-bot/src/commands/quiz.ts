@@ -49,7 +49,7 @@ export async function quizCommand(ctx: MyContext): Promise<void> {
   db.saveQuizSession(userId, targetTerm.id, correctIdx, options.map((t: GlossaryTerm) => t.id));
 
   // Show question
-  const definitionSnippet = targetTerm.definition.slice(0, 200) + "...";
+  const definitionSnippet = targetTerm.definition;
   const question = ctx.t("quiz-question", { definition: definitionSnippet });
 
   const keyboard = new InlineKeyboard()
