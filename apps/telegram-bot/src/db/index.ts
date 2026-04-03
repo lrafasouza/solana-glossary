@@ -201,14 +201,21 @@ class DatabaseWrapper {
   // Streaks
   viewDailyTerm(userId: number): { streak: number; isNew: boolean } {
     const today = new Date().toISOString().split("T")[0];
-    const row = this.db.prepare("SELECT last_daily_date, streak_count FROM streaks WHERE user_id = ?").get(userId) as { last_daily_date: string; streak_count: number } | undefined;
+    const row = this.db.prepare("SELECT last_daily_date, streak_count, max_streak FROM streaks WHERE user_id = ?").get(userId) as {
+      last_daily_date: string;
+      streak_count: number;
+      max_streak: number;
+    } | undefined;
 
     if (!row) {
-      this.db.prepare("INSERT INTO streaks (user_id, last_daily_date, streak_count) VALUES (?, ?, 1)").run(userId, today);
+      this.db.prepare("INSERT INTO streaks (user_id, last_daily_date, streak_count, max_streak, updated_at) VALUES (?, ?, 1, 1, unixepoch())").run(userId, today);
       return { streak: 1, isNew: true };
     }
 
     if (row.last_daily_date === today) {
+      if (row.streak_count > row.max_streak) {
+        this.db.prepare("UPDATE streaks SET max_streak = ?, updated_at = unixepoch() WHERE user_id = ?").run(row.streak_count, userId);
+      }
       return { streak: row.streak_count, isNew: false };
     }
 
@@ -223,7 +230,10 @@ class DatabaseWrapper {
       newStreak = 1;
     }
 
-    this.db.prepare("UPDATE streaks SET last_daily_date = ?, streak_count = ? WHERE user_id = ?").run(today, newStreak, userId);
+    const newMax = Math.max(newStreak, row.max_streak);
+    this.db.prepare(
+      "UPDATE streaks SET last_daily_date = ?, streak_count = ?, max_streak = ?, updated_at = unixepoch() WHERE user_id = ?"
+    ).run(today, newStreak, newMax, userId);
     return { streak: newStreak, isNew: true };
   }
 
@@ -255,6 +265,10 @@ class DatabaseWrapper {
 
     if (streak.last_daily_date === today) {
       // Already did quiz today, no change
+      if (streak.current_streak > streak.max_streak) {
+        this.db.prepare("UPDATE streaks SET max_streak = ?, updated_at = unixepoch() WHERE user_id = ?").run(streak.current_streak, userId);
+        return { current: streak.current_streak, max: streak.current_streak, isNewRecord: false };
+      }
       return { current: streak.current_streak, max: streak.max_streak, isNewRecord: false };
     } else if (streak.last_daily_date === yesterdayStr || streak.last_daily_date === null) {
       // Continue or start streak

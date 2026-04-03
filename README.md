@@ -175,6 +175,19 @@ These screenshots show the bot running in Telegram and demonstrate the core prod
 
 ![Favorites](./Imagens/favorites.png)
 
+### Random 
+
+![Random](./Imagens/random.png)
+
+### Term of the Day 
+
+![Term of the Day](./Imagens/termododia.png)
+
+### Related
+
+![Related](./Imagens/relacionados.png)
+
+
 ### Streak and Leaderboard
 
 ![Streak and Leaderboard](./Imagens/streakEleaderboard.png)
