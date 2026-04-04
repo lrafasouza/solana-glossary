@@ -5,6 +5,9 @@ import { formatTermCard } from "../utils/format.js";
 import type { GlossaryTerm } from "../glossary/index.js";
 import type { MyContext } from "../context.js";
 
+// Intentionally uses formatTermCard (sync) instead of buildEnrichedTermCard (async).
+// Inline queries must respond within ~5s; firing RPC/CoinGecko calls per result
+// batch would risk timeouts. Live data is available via /explain and /glossary.
 function buildInlineResult(term: GlossaryTerm, t: MyContext["t"]) {
   const card = formatTermCard(term, t);
   return InlineQueryResultBuilder.article(term.id, term.term, {

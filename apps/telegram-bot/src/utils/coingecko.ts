@@ -1,7 +1,4 @@
-interface CacheEntry<T> {
-  expiresAt: number;
-  value: T;
-}
+import { type CacheEntry, isFresh } from "./cache.js";
 
 export interface SolPrice {
   usd: number;
@@ -21,13 +18,15 @@ const DEFI_TERMS = new Set([
 let priceCache: CacheEntry<SolPrice> | null = null;
 
 export async function getSolPrice(): Promise<SolPrice | null> {
-  if (priceCache && priceCache.expiresAt > Date.now()) {
-    return priceCache.value;
-  }
+  if (isFresh(priceCache)) return priceCache.value;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_000);
 
   try {
     const response = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true",
+      { signal: controller.signal },
     );
     if (!response.ok) {
       throw new Error(`CoinGecko request failed: ${response.status}`);
@@ -37,7 +36,7 @@ export async function getSolPrice(): Promise<SolPrice | null> {
       solana?: { usd?: number; usd_24h_change?: number };
     };
     const value = json.solana;
-    if (!value?.usd || typeof value.usd_24h_change !== "number") {
+    if (value?.usd == null || typeof value.usd_24h_change !== "number") {
       throw new Error("CoinGecko data missing");
     }
 
@@ -52,6 +51,8 @@ export async function getSolPrice(): Promise<SolPrice | null> {
     return result;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

@@ -189,7 +189,14 @@ path-desc-defi-foundations = Conceitos essenciais de DeFi
 path-name-builders-path = Builder's Path
 path-desc-builders-path = Conceitos essenciais para devs Solana
 
-explain-no-reply = 💬 Responda a uma mensagem para usar <code>/explicar</code>.
+explain-no-reply =
+    💬 <b>Como usar o /explicar:</b>
+
+    1. Segure a mensagem que quer entender
+    2. Toque em <b>Responder</b>
+    3. Envie <code>/explicar</code>
+
+    O bot vai explicar os termos Solana presentes nessa mensagem.
 explain-not-found = ❌ Não encontrei termos Solana reconhecíveis nessa mensagem.
 group-welcome =
     👋 <b>Olá! Sou o Solana Glossary Bot.</b>

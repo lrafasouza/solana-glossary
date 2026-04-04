@@ -238,6 +238,23 @@ export function findClosest(query: string): GlossaryTerm | undefined {
   return bestDistance <= 3 ? bestMatch : undefined;
 }
 
+// Built once at module load: normalized phrase → { term, kind }
+// Avoids O(tokens × spans × 1001) loop on every /explain call.
+const phraseIndex = new Map<
+  string,
+  { term: GlossaryTerm; kind: TextMatch["kind"] }
+>();
+for (const term of allTerms) {
+  const name = normalize(term.term);
+  const id = normalize(term.id);
+  if (!phraseIndex.has(name)) phraseIndex.set(name, { term, kind: "name" });
+  if (!phraseIndex.has(id)) phraseIndex.set(id, { term, kind: "name" });
+  for (const alias of term.aliases ?? []) {
+    const na = normalize(alias);
+    if (!phraseIndex.has(na)) phraseIndex.set(na, { term, kind: "alias" });
+  }
+}
+
 export function findTermsInText(text: string): GlossaryTerm[] {
   const tokens = tokenize(text);
   if (tokens.length === 0) return [];
@@ -250,37 +267,20 @@ export function findTermsInText(text: string): GlossaryTerm[] {
       if (slice.length !== span) continue;
 
       const phrase = slice.join(" ");
+      const hit = phraseIndex.get(phrase);
+      if (!hit) continue;
 
-      for (const term of allTerms) {
-        const normalizedName = normalize(term.term);
-        const normalizedId = normalize(term.id);
-        const normalizedAliases = (term.aliases ?? []).map(normalize);
+      const { term, kind } = hit;
+      const next: TextMatch = { term, position: i, kind, span };
+      const existing = matches.get(term.id);
 
-        let kind: TextMatch["kind"] | null = null;
-        if (phrase === normalizedName || phrase === normalizedId) {
-          kind = "name";
-        } else if (normalizedAliases.includes(phrase)) {
-          kind = "alias";
-        }
-
-        if (!kind) continue;
-
-        const existing = matches.get(term.id);
-        const next: TextMatch = {
-          term,
-          position: i,
-          kind,
-          span,
-        };
-
-        if (
-          !existing ||
-          next.position < existing.position ||
-          (next.position === existing.position &&
-            matchPriority(next) < matchPriority(existing))
-        ) {
-          matches.set(term.id, next);
-        }
+      if (
+        !existing ||
+        next.position < existing.position ||
+        (next.position === existing.position &&
+          matchPriority(next) < matchPriority(existing))
+      ) {
+        matches.set(term.id, next);
       }
     }
   }

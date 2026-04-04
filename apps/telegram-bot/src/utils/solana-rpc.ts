@@ -1,7 +1,4 @@
-interface CacheEntry<T> {
-  expiresAt: number;
-  value: T;
-}
+import { type CacheEntry, isFresh } from "./cache.js";
 
 interface LiveNetworkStats {
   epoch: number;
@@ -21,16 +18,19 @@ async function rpcRequest<T>(
   method: string,
   params: unknown[] = [],
 ): Promise<T> {
-  const response = await fetch(RPC_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: 1,
-      method,
-      params,
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_000);
+  let response: Response;
+  try {
+    response = await fetch(RPC_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) {
     throw new Error(`RPC request failed: ${response.status}`);
@@ -49,9 +49,7 @@ async function rpcRequest<T>(
 }
 
 export async function getLiveNetworkStats(): Promise<LiveNetworkStats | null> {
-  if (statsCache && statsCache.expiresAt > Date.now()) {
-    return statsCache.value;
-  }
+  if (isFresh(statsCache)) return statsCache.value;
 
   try {
     const [epochInfo, voteAccounts, perfSamples] = await Promise.all([
@@ -104,12 +102,7 @@ export async function getLiveNetworkStats(): Promise<LiveNetworkStats | null> {
 const EPOCH_TERMS = new Set(["epoch", "leader-schedule"]);
 const SLOT_TERMS = new Set(["slot", "block"]);
 const VALIDATOR_TERMS = new Set(["validator", "vote-account", "stake"]);
-const TPS_TERMS = new Set([
-  "turbine",
-  "gulf-stream",
-  "proof-of-history",
-  "tower-bft",
-]);
+const TPS_TERMS = new Set(["turbine", "proof-of-history", "tower-bft"]);
 
 export async function getLiveStatsLine(termId: string): Promise<string | null> {
   if (
