@@ -1,10 +1,10 @@
 // src/commands/start.ts
 import { InlineKeyboard } from "grammy";
 import { lookupTerm } from "../utils/search.js";
-import { formatTermCard } from "../utils/format.js";
 import { buildMainMenuKeyboard, buildTermKeyboard } from "../utils/keyboard.js";
 import { IMAGES } from "../config.js";
 import type { MyContext } from "../context.js";
+import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 const LANGUAGE_PICKER = `🌐 <b>Choose your language</b>
 Escolha seu idioma
@@ -23,7 +23,7 @@ export async function startCommand(ctx: MyContext): Promise<void> {
     const result = lookupTerm(deepLink);
     if (result.type === "found") {
       const userId = ctx.from?.id;
-      const card = formatTermCard(
+      const card = await buildEnrichedTermCard(
         result.term,
         ctx.t.bind(ctx),
         ctx.session.language || "en",

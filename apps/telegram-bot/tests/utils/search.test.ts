@@ -1,6 +1,6 @@
 // tests/utils/search.test.ts
 import { describe, it, expect } from "vitest";
-import { lookupTerm } from "../../src/utils/search.js";
+import { findTermsInText, lookupTerm } from "../../src/utils/search.js";
 
 describe("lookupTerm", () => {
   it("finds a term by exact ID", () => {
@@ -57,5 +57,23 @@ describe("lookupTerm", () => {
   it("returns not-found for empty string", () => {
     const result = lookupTerm("");
     expect(result.type).toBe("not-found");
+  });
+
+  it("finds terms in free text in source order", () => {
+    const matches = findTermsInText(
+      "Proof of History works with Tower BFT for fast consensus.",
+    );
+    expect(matches.map((term) => term.id)).toEqual([
+      "proof-of-history",
+      "tower-bft",
+    ]);
+  });
+
+  it("deduplicates repeated mentions and supports aliases", () => {
+    const matches = findTermsInText("PoH, PoH, and validator talk.");
+    expect(matches.map((term) => term.id)).toEqual([
+      "proof-of-history",
+      "validator",
+    ]);
   });
 });

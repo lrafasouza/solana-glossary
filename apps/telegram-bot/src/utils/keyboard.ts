@@ -170,7 +170,7 @@ export function buildPathStepKeyboard(
   }
 
   keyboard.row();
-  keyboard.text(t("btn-back-menu"), "menu:path");
+  keyboard.text(t("btn-back-menu"), "menu:main");
   return keyboard;
 }
 

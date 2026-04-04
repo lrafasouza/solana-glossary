@@ -1,6 +1,5 @@
 import { db } from "../db/index.js";
 import { getTerm } from "../glossary/index.js";
-import { formatTermCard } from "../utils/format.js";
 import {
   buildPathMenuKeyboard,
   buildPathStepKeyboard,
@@ -11,6 +10,7 @@ import {
   type PathProgress,
 } from "../data/paths.js";
 import type { MyContext } from "../context.js";
+import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 export async function pathCommand(ctx: MyContext): Promise<void> {
   await sendPathMenu(ctx);
@@ -83,7 +83,7 @@ export async function sendPathStep(
     step: boundedStep + 1,
     total: path.termIds.length,
   });
-  const card = formatTermCard(
+  const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
     ctx.session.language || "en",

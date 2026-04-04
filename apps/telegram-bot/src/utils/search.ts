@@ -6,7 +6,7 @@ export type LookupResult =
   | { type: "multiple"; terms: GlossaryTerm[] }
   | { type: "not-found" };
 
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -19,9 +19,16 @@ function compact(text: string): string {
   return normalize(text).replace(/\s+/g, "");
 }
 
-function tokenize(text: string): string[] {
+export function tokenize(text: string): string[] {
   return normalize(text).split(/\s+/).filter(Boolean);
 }
+
+type TextMatch = {
+  term: GlossaryTerm;
+  position: number;
+  kind: "name" | "alias";
+  span: number;
+};
 
 type SearchScore = {
   score: number;
@@ -229,4 +236,64 @@ export function findClosest(query: string): GlossaryTerm | undefined {
   }
 
   return bestDistance <= 3 ? bestMatch : undefined;
+}
+
+export function findTermsInText(text: string): GlossaryTerm[] {
+  const tokens = tokenize(text);
+  if (tokens.length === 0) return [];
+
+  const matches = new Map<string, TextMatch>();
+
+  for (let i = 0; i < tokens.length; i++) {
+    for (let span = 3; span >= 1; span--) {
+      const slice = tokens.slice(i, i + span);
+      if (slice.length !== span) continue;
+
+      const phrase = slice.join(" ");
+
+      for (const term of allTerms) {
+        const normalizedName = normalize(term.term);
+        const normalizedId = normalize(term.id);
+        const normalizedAliases = (term.aliases ?? []).map(normalize);
+
+        let kind: TextMatch["kind"] | null = null;
+        if (phrase === normalizedName || phrase === normalizedId) {
+          kind = "name";
+        } else if (normalizedAliases.includes(phrase)) {
+          kind = "alias";
+        }
+
+        if (!kind) continue;
+
+        const existing = matches.get(term.id);
+        const next: TextMatch = {
+          term,
+          position: i,
+          kind,
+          span,
+        };
+
+        if (
+          !existing ||
+          next.position < existing.position ||
+          (next.position === existing.position &&
+            matchPriority(next) < matchPriority(existing))
+        ) {
+          matches.set(term.id, next);
+        }
+      }
+    }
+  }
+
+  return [...matches.values()]
+    .sort((a, b) => {
+      if (a.position !== b.position) return a.position - b.position;
+      return matchPriority(a) - matchPriority(b);
+    })
+    .map((entry) => entry.term);
+}
+
+function matchPriority(match: TextMatch): number {
+  if (match.kind === "name") return -match.span;
+  return 10 - match.span;
 }

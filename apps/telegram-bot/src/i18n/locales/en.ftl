@@ -10,6 +10,7 @@ help-message =
 
     🔍 <b>Search:</b>
     <code>/glossary &lt;term&gt;</code> — look up a Solana term
+    <code>/explain</code> — reply to a message to explain Solana terms in chat
     <code>/random</code> — random term
 
     📂 <b>Browse:</b>
@@ -131,6 +132,7 @@ onboarding-tips =
     💡 <b>Quick tips:</b>
 
     🔍 Look up any term: <code>/glossary proof-of-history</code>
+    💬 In groups, reply with <code>/explain</code>
     📂 Browse by category: <code>/categories</code>
     🧠 Test your knowledge: <code>/quiz</code>
     💻 Follow a dev path: <code>/path</code>
@@ -187,6 +189,21 @@ path-name-defi-foundations = DeFi Foundations
 path-desc-defi-foundations = Essential DeFi primitives
 path-name-builders-path = Builder's Path
 path-desc-builders-path = Core concepts for Solana builders
+
+explain-no-reply = 💬 Reply to a message to use <code>/explain</code>.
+explain-not-found = ❌ No recognizable Solana terms found in that message.
+group-welcome =
+    👋 <b>Hello! I’m the Solana Glossary Bot.</b>
+
+    I’m here to explain Solana terms without pulling the conversation out of Telegram.
+
+    🔍 <code>/glossary &lt;term&gt;</code> — search a term
+    💬 <code>/explain</code> — reply to a message to explain terms
+    💻 <code>/path</code> — guided learning paths
+    🧠 <code>/quiz</code> — Solana quiz
+    📅 <code>/termofday</code> — term of the day
+
+    I also work inline with <code>@{ $bot_username } &lt;term&gt;</code>.
 
 language-changed = ✅ Language changed to English.
 language-invalid = ❌ Invalid language. Use: <code>/language pt | en | es</code>

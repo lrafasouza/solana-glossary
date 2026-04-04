@@ -1,9 +1,9 @@
 // src/commands/daily.ts
 import { allTerms } from "../glossary/index.js";
-import { formatTermCard } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { db } from "../db/index.js";
 import type { MyContext } from "../context.js";
+import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 /** Returns the same term for every user on a given day (date-based seed) */
 function getDailyTerm() {
@@ -39,7 +39,7 @@ export async function dailyTermCommand(ctx: MyContext): Promise<void> {
     ? `📅 <b>${ctx.t("daily-term-header")}</b>  ${streakText}\n\n`
     : `📅 <b>${ctx.t("daily-term-header")}</b>\n\n`;
 
-  const card = formatTermCard(
+  const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
     ctx.session.language || "en",

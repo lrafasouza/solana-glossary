@@ -1,8 +1,8 @@
 // src/handlers/text.ts
 import { lookupTerm } from "../utils/search.js";
-import { formatTermCard } from "../utils/format.js";
 import { buildTermKeyboard, buildSelectKeyboard } from "../utils/keyboard.js";
 import type { MyContext } from "../context.js";
+import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 export async function handleTextMessage(ctx: MyContext): Promise<void> {
   // Only respond to free text in private chats (DMs)
@@ -28,7 +28,7 @@ export async function handleTextMessage(ctx: MyContext): Promise<void> {
 
   if (result.type === "found") {
     const userId = ctx.from?.id;
-    const card = formatTermCard(
+    const card = await buildEnrichedTermCard(
       result.term,
       ctx.t.bind(ctx),
       ctx.session.language || "en",

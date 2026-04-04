@@ -5,6 +5,7 @@ import type { MyContext, SessionData } from "../src/context.js";
 export function createMockCtx(options?: {
   text?: string;
   match?: string;
+  replyToText?: string;
   languageCode?: string;
   sessionLanguage?: SessionData["language"];
   chatType?: "private" | "group" | "supergroup" | "channel";
@@ -24,7 +25,12 @@ export function createMockCtx(options?: {
     },
     chat: { type: opts.chatType ?? "private", id: 456 },
     match: opts.match ?? "",
-    message: { text: opts.text ?? "" },
+    message: {
+      text: opts.text ?? "",
+      reply_to_message: opts.replyToText
+        ? { text: opts.replyToText }
+        : undefined,
+    },
     session: { language: opts.sessionLanguage },
     inlineQuery: {
       query: opts.match ?? "",

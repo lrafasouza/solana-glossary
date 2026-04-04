@@ -10,6 +10,7 @@ help-message =
 
     🔍 <b>Buscar:</b>
     <code>/glossario &lt;termo&gt;</code> — buscar um termo Solana
+    <code>/explicar</code> — responda a uma mensagem para explicar termos no grupo
     <code>/aleatorio</code> — termo aleatório
 
     📂 <b>Explorar:</b>
@@ -130,6 +131,7 @@ onboarding-tips =
     💡 <b>Dicas rápidas:</b>
 
     🔍 Busque qualquer termo: <code>/glossario proof-of-history</code>
+    💬 Em grupos, responda uma mensagem com <code>/explicar</code>
     📂 Explore por categoria: <code>/categorias</code>
     🧠 Teste seus conhecimentos: <code>/quiz</code>
     💻 Siga uma trilha dev: <code>/path</code>
@@ -186,6 +188,21 @@ path-name-defi-foundations = DeFi Foundations
 path-desc-defi-foundations = Conceitos essenciais de DeFi
 path-name-builders-path = Builder's Path
 path-desc-builders-path = Conceitos essenciais para devs Solana
+
+explain-no-reply = 💬 Responda a uma mensagem para usar <code>/explicar</code>.
+explain-not-found = ❌ Não encontrei termos Solana reconhecíveis nessa mensagem.
+group-welcome =
+    👋 <b>Olá! Sou o Solana Glossary Bot.</b>
+
+    Entro no grupo para explicar termos Solana sem tirar a conversa do fluxo.
+
+    🔍 <code>/glossario &lt;termo&gt;</code> — buscar um termo
+    💬 <code>/explicar</code> — responda a uma mensagem para explicar termos
+    💻 <code>/path</code> — trilhas guiadas de aprendizado
+    🧠 <code>/quiz</code> — quiz de Solana
+    📅 <code>/termododia</code> — termo do dia
+
+    Também funciona em inline com <code>@{ $bot_username } &lt;termo&gt;</code>.
 
 language-changed = ✅ Idioma alterado para português.
 language-invalid = ❌ Idioma inválido. Use: <code>/idioma pt | en | es</code>

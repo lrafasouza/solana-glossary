@@ -12,6 +12,7 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Iniciar o bot" },
         { command: "glossario", description: "Buscar um termo" },
+        { command: "explicar", description: "Explicar termos de uma mensagem" },
         { command: "path", description: "Trilha para desenvolvedores" },
         { command: "aleatorio", description: "Termo aleatório" },
         { command: "categorias", description: "Explorar as 14 categorias" },
@@ -30,6 +31,7 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Start the bot" },
         { command: "glossary", description: "Search a Solana term" },
+        { command: "explain", description: "Explain terms from a message" },
         { command: "path", description: "Developer learning paths" },
         { command: "random", description: "Random term" },
         { command: "categories", description: "Browse all 14 categories" },
@@ -48,6 +50,7 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Iniciar el bot" },
         { command: "glosario", description: "Buscar un término en español" },
+        { command: "explicar", description: "Explicar términos de un mensaje" },
         { command: "path", description: "Rutas para desarrolladores" },
         { command: "aleatorio", description: "Término aleatorio" },
         { command: "categorias", description: "Explorar las 14 categorías" },
@@ -66,6 +69,7 @@ async function setCommands() {
       commands: [
         { command: "start", description: "Start the bot" },
         { command: "glossary", description: "Search a Solana term" },
+        { command: "explain", description: "Explain terms from a message" },
         { command: "path", description: "Developer learning paths" },
         { command: "random", description: "Random term" },
         { command: "categories", description: "Browse all 14 categories" },

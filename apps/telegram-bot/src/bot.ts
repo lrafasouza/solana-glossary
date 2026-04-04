@@ -12,6 +12,7 @@ import { startCommand } from "./commands/start.js";
 import { helpCommand } from "./commands/help.js";
 import { languageCommand } from "./commands/language.js";
 import { glossaryCommand } from "./commands/glossary.js";
+import { explainCommand } from "./commands/explain.js";
 import { categoriesCommand, categoryCommand } from "./commands/categories.js";
 import { pathCommand } from "./commands/path.js";
 import { dailyTermCommand } from "./commands/daily.js";
@@ -47,6 +48,7 @@ import {
 } from "./handlers/callbacks.js";
 import { handleInlineQuery } from "./handlers/inline.js";
 import { handleTextMessage } from "./handlers/text.js";
+import { handleBotAdded } from "./handlers/group.js";
 
 export const bot = new Bot<MyContext>(config.botToken);
 
@@ -98,6 +100,7 @@ bot.command("help", helpCommand);
 
 bot.command(["idioma", "language"], languageCommand);
 bot.command(["glossario", "glossary", "glosario"], glossaryCommand);
+bot.command(["explain", "explicar"], explainCommand);
 bot.command(["path", "trilha"], pathCommand);
 bot.command(["categorias", "categories"], categoriesCommand);
 bot.command(["categoria", "category"], categoryCommand);
@@ -136,6 +139,7 @@ bot.callbackQuery(/^feedback:/, handleFeedbackCallback);
 // ── Inline mode ───────────────────────────────────────────────────────────────
 
 bot.on("inline_query", handleInlineQuery);
+bot.on("my_chat_member", handleBotAdded);
 
 // ── Free text in DMs ──────────────────────────────────────────────────────────
 

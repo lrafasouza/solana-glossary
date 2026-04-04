@@ -1,10 +1,10 @@
 // src/commands/glossary.ts
 import { lookupTerm, findClosest } from "../utils/search.js";
-import { formatTermCard } from "../utils/format.js";
 import { buildTermKeyboard, buildSelectKeyboard } from "../utils/keyboard.js";
 import { InlineKeyboard } from "grammy";
 import { db } from "../db/index.js";
 import type { MyContext } from "../context.js";
+import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 export async function glossaryCommand(ctx: MyContext): Promise<void> {
   const query = (ctx.match as string).trim();
@@ -48,7 +48,7 @@ export async function glossaryCommand(ctx: MyContext): Promise<void> {
       db.addHistory(userId, result.term.id);
     }
 
-    const card = formatTermCard(
+    const card = await buildEnrichedTermCard(
       result.term,
       ctx.t.bind(ctx),
       ctx.session.language || "en",

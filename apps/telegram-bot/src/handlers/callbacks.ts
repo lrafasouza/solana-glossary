@@ -6,11 +6,7 @@ import {
 } from "../glossary/index.js";
 import type { Category } from "../glossary/index.js";
 import { InlineKeyboard } from "grammy";
-import {
-  formatTermCard,
-  formatTermList,
-  formatCategoryName,
-} from "../utils/format.js";
+import { formatTermList, formatCategoryName } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { sendMainMenu, sendWelcome } from "../commands/start.js";
 import {
@@ -25,6 +21,7 @@ import { sendPathMenu, sendPathStep } from "../commands/path.js";
 import { db } from "../db/index.js";
 import type { MyContext, SessionData } from "../context.js";
 import { getLearningPath } from "../data/paths.js";
+import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 /** Strip HTML tags for use in plain-text callback popups */
 function stripHtml(text: string): string {
@@ -109,7 +106,7 @@ export async function handleSelectCallback(ctx: MyContext): Promise<void> {
     db.addHistory(userId, termId);
   }
 
-  const card = formatTermCard(
+  const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
     ctx.session.language || "en",
@@ -252,11 +249,6 @@ export async function handlePathStepCallback(ctx: MyContext): Promise<void> {
       show_alert: true,
     });
     return;
-  }
-
-  if (ctx.from?.id && step === path.termIds.length - 1) {
-    db.setPathStep(ctx.from.id, pathId, step);
-    db.markPathCompleted(ctx.from.id, pathId);
   }
 
   await ctx.answerCallbackQuery();
@@ -451,7 +443,7 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
 
     // Show the term card
     if (correctTerm) {
-      const card = formatTermCard(
+      const card = await buildEnrichedTermCard(
         correctTerm,
         ctx.t.bind(ctx),
         ctx.session.language || "en",
@@ -567,7 +559,7 @@ export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
 
   // Show the term card
   if (correctTerm) {
-    const card = formatTermCard(
+    const card = await buildEnrichedTermCard(
       correctTerm,
       ctx.t.bind(ctx),
       ctx.session.language || "en",
