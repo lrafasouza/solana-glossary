@@ -16,6 +16,11 @@ export interface QuizSession {
   options: string[];
 }
 
+export interface StoredPathProgress {
+  step: number;
+  completed: boolean;
+}
+
 class DatabaseWrapper {
   private db: Database.Database;
 
@@ -78,6 +83,16 @@ class DatabaseWrapper {
         term_id TEXT NOT NULL,
         correct_idx INTEGER NOT NULL,
         options TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS user_path_progress (
+        user_id INTEGER NOT NULL,
+        path_id TEXT NOT NULL,
+        step INTEGER DEFAULT 0,
+        completed INTEGER DEFAULT 0,
+        started_at INTEGER DEFAULT (unixepoch()),
+        updated_at INTEGER DEFAULT (unixepoch()),
+        PRIMARY KEY (user_id, path_id)
       );
     `);
 
@@ -612,6 +627,73 @@ class DatabaseWrapper {
 
   clearQuizSession(userId: number): void {
     this.db.prepare("DELETE FROM quiz_sessions WHERE user_id = ?").run(userId);
+  }
+
+  // Learning paths
+  getPathProgress(
+    userId: number,
+    pathId: string,
+  ): StoredPathProgress | undefined {
+    const row = this.db
+      .prepare(
+        "SELECT step, completed FROM user_path_progress WHERE user_id = ? AND path_id = ?",
+      )
+      .get(userId, pathId) as { step: number; completed: number } | undefined;
+
+    if (!row) return undefined;
+
+    return {
+      step: row.step,
+      completed: row.completed === 1,
+    };
+  }
+
+  setPathStep(userId: number, pathId: string, step: number): void {
+    this.db
+      .prepare(
+        `INSERT INTO user_path_progress (user_id, path_id, step, completed, updated_at)
+         VALUES (?, ?, ?, 0, unixepoch())
+         ON CONFLICT(user_id, path_id) DO UPDATE SET
+           step = excluded.step,
+           updated_at = unixepoch()`,
+      )
+      .run(userId, pathId, step);
+  }
+
+  markPathCompleted(userId: number, pathId: string): void {
+    this.db
+      .prepare(
+        `UPDATE user_path_progress
+         SET completed = 1, updated_at = unixepoch()
+         WHERE user_id = ? AND path_id = ?`,
+      )
+      .run(userId, pathId);
+  }
+
+  resetPath(userId: number, pathId: string): void {
+    this.db
+      .prepare(
+        "DELETE FROM user_path_progress WHERE user_id = ? AND path_id = ?",
+      )
+      .run(userId, pathId);
+  }
+
+  getAllPathProgress(userId: number): Record<string, StoredPathProgress> {
+    const rows = this.db
+      .prepare(
+        "SELECT path_id, step, completed FROM user_path_progress WHERE user_id = ?",
+      )
+      .all(userId) as { path_id: string; step: number; completed: number }[];
+
+    return Object.fromEntries(
+      rows.map((row) => [
+        row.path_id,
+        {
+          step: row.step,
+          completed: row.completed === 1,
+        },
+      ]),
+    );
   }
 
   close(): void {

@@ -13,14 +13,18 @@ import {
 } from "../utils/format.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { sendMainMenu, sendWelcome } from "../commands/start.js";
-import { sendCategoriesMenu, sendCategoryTerms } from "../commands/categories.js";
+import {
+  sendCategoriesMenu,
+  sendCategoryTerms,
+} from "../commands/categories.js";
 import { glossaryCommand } from "../commands/glossary.js";
 import { randomTermCommand } from "../commands/random.js";
-import { quizCommand } from "../commands/quiz.js";
+import { quizCommand, sendQuiz } from "../commands/quiz.js";
 import { helpCommand } from "../commands/help.js";
-import { pathCommand } from "../commands/path.js";
+import { sendPathMenu, sendPathStep } from "../commands/path.js";
 import { db } from "../db/index.js";
 import type { MyContext, SessionData } from "../context.js";
+import { getLearningPath } from "../data/paths.js";
 
 /** Strip HTML tags for use in plain-text callback popups */
 function stripHtml(text: string): string {
@@ -200,11 +204,144 @@ export async function handleMenuCallback(ctx: MyContext): Promise<void> {
       return;
     case "path":
       ctx.session.awaitingGlossaryQuery = false;
-      await pathCommand(ctx);
+      await sendPathMenu(ctx, true);
       return;
     default:
       await ctx.reply(ctx.t("internal-error"));
   }
+}
+
+export async function handlePathSelectCallback(ctx: MyContext): Promise<void> {
+  const pathId = (ctx.callbackQuery?.data ?? "").slice("path_select:".length);
+  const path = getLearningPath(pathId);
+  const userId = ctx.from?.id;
+
+  if (!path) {
+    await ctx.answerCallbackQuery({
+      text: ctx.t("internal-error"),
+      show_alert: true,
+    });
+    return;
+  }
+
+  const progress = userId ? db.getPathProgress(userId, pathId) : undefined;
+  const step = progress?.completed
+    ? path.termIds.length - 1
+    : (progress?.step ?? 0);
+
+  await ctx.answerCallbackQuery();
+  await sendPathStep(ctx, pathId, step, true);
+}
+
+export async function handlePathStepCallback(ctx: MyContext): Promise<void> {
+  const data = ctx.callbackQuery?.data ?? "";
+  const match = data.match(/^path_step:(.+):(\d+)$/);
+
+  if (!match) {
+    await ctx.answerCallbackQuery({ text: "Invalid callback" });
+    return;
+  }
+
+  const pathId = match[1];
+  const step = parseInt(match[2], 10);
+  const path = getLearningPath(pathId);
+
+  if (!path) {
+    await ctx.answerCallbackQuery({
+      text: ctx.t("internal-error"),
+      show_alert: true,
+    });
+    return;
+  }
+
+  if (ctx.from?.id && step === path.termIds.length - 1) {
+    db.setPathStep(ctx.from.id, pathId, step);
+    db.markPathCompleted(ctx.from.id, pathId);
+  }
+
+  await ctx.answerCallbackQuery();
+  await sendPathStep(ctx, pathId, step, true);
+}
+
+export async function handlePathQuizCallback(ctx: MyContext): Promise<void> {
+  const pathId = (ctx.callbackQuery?.data ?? "").slice("path_quiz:".length);
+  const path = getLearningPath(pathId);
+
+  if (!path) {
+    await ctx.answerCallbackQuery({
+      text: ctx.t("internal-error"),
+      show_alert: true,
+    });
+    return;
+  }
+
+  const pool = path.termIds
+    .map((termId) => getTerm(termId))
+    .filter((term): term is NonNullable<typeof term> => term !== undefined);
+
+  await ctx.answerCallbackQuery();
+  await sendQuiz(ctx, pool);
+}
+
+export async function handlePathResetCallback(ctx: MyContext): Promise<void> {
+  const pathId = (ctx.callbackQuery?.data ?? "").slice("path_reset:".length);
+  const path = getLearningPath(pathId);
+  const userId = ctx.from?.id;
+
+  if (!path || !userId) {
+    await ctx.answerCallbackQuery({
+      text: ctx.t("internal-error"),
+      show_alert: true,
+    });
+    return;
+  }
+
+  db.resetPath(userId, pathId);
+  await ctx.answerCallbackQuery();
+  await sendPathStep(ctx, pathId, 0, true);
+}
+
+export async function handlePathFavAddCallback(ctx: MyContext): Promise<void> {
+  const data = ctx.callbackQuery?.data ?? "";
+  const match = data.match(/^path_fav_add:(.+):(\d+):(.+)$/);
+  const userId = ctx.from?.id;
+
+  if (!match || !userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("internal-error") });
+    return;
+  }
+
+  const [, pathId, stepText, termId] = match;
+
+  try {
+    db.addFavorite(userId, termId);
+    await ctx.answerCallbackQuery({ text: ctx.t("favorite-added") });
+    await sendPathStep(ctx, pathId, parseInt(stepText, 10), true);
+  } catch (err) {
+    await ctx.answerCallbackQuery({
+      text: ctx.t("favorites-limit"),
+      show_alert: true,
+    });
+  }
+}
+
+export async function handlePathFavRemoveCallback(
+  ctx: MyContext,
+): Promise<void> {
+  const data = ctx.callbackQuery?.data ?? "";
+  const match = data.match(/^path_fav_remove:(.+):(\d+):(.+)$/);
+  const userId = ctx.from?.id;
+
+  if (!match || !userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("internal-error") });
+    return;
+  }
+
+  const [, pathId, stepText, termId] = match;
+
+  db.removeFavorite(userId, termId);
+  await ctx.answerCallbackQuery({ text: ctx.t("favorite-removed") });
+  await sendPathStep(ctx, pathId, parseInt(stepText, 10), true);
 }
 
 // ── Favorites ────────────────────────────────────────────────────────────────

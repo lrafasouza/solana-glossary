@@ -1,5 +1,5 @@
 // src/commands/quiz.ts
-import { allTerms, getTermsByCategory } from "../glossary/index.js";
+import { allTerms } from "../glossary/index.js";
 import type { GlossaryTerm } from "../glossary/index.js";
 import { InlineKeyboard } from "grammy";
 import { db } from "../db/index.js";
@@ -15,6 +15,13 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export async function quizCommand(ctx: MyContext): Promise<void> {
+  await sendQuiz(ctx);
+}
+
+export async function sendQuiz(
+  ctx: MyContext,
+  pool?: GlossaryTerm[],
+): Promise<void> {
   const userId = ctx.from?.id;
   if (!userId) {
     await ctx.reply(ctx.t("quiz-no-user"));
@@ -22,14 +29,23 @@ export async function quizCommand(ctx: MyContext): Promise<void> {
   }
 
   // Pick a random term with definition
-  const termsWithDef = allTerms.filter(
+  const candidatePool = pool && pool.length >= 4 ? pool : allTerms;
+  const termsWithDef = candidatePool.filter(
     (t: GlossaryTerm) => t.definition && t.definition.length > 20,
   );
+  if (termsWithDef.length < 4) {
+    await ctx.reply(ctx.t("internal-error"));
+    return;
+  }
   const targetTerm =
     termsWithDef[Math.floor(Math.random() * termsWithDef.length)];
 
   // Get 3 distractors from same category, fallback to random if not enough
-  const categoryTerms = getTermsByCategory(targetTerm.category).filter(
+  const categoryTerms = candidatePool
+    .filter((t: GlossaryTerm) => t.category === targetTerm.category)
+    .filter((t: GlossaryTerm) => t.id !== targetTerm.id);
+
+  const otherPool = candidatePool.filter(
     (t: GlossaryTerm) => t.id !== targetTerm.id,
   );
 
@@ -39,14 +55,25 @@ export async function quizCommand(ctx: MyContext): Promise<void> {
   } else {
     // Fallback: get remaining from other categories
     const remaining = 3 - categoryTerms.length;
-    const otherTerms = allTerms.filter(
+    const otherTerms = otherPool.filter(
       (t: GlossaryTerm) =>
-        t.id !== targetTerm.id &&
         !categoryTerms.some((ct: GlossaryTerm) => ct.id === t.id),
     );
     distractors = [
       ...categoryTerms,
       ...shuffleArray(otherTerms).slice(0, remaining),
+    ];
+  }
+
+  if (distractors.length < 3) {
+    const backupTerms = allTerms.filter(
+      (t: GlossaryTerm) =>
+        t.id !== targetTerm.id &&
+        !distractors.some((d: GlossaryTerm) => d.id === t.id),
+    );
+    distractors = [
+      ...distractors,
+      ...shuffleArray(backupTerms).slice(0, 3 - distractors.length),
     ];
   }
 

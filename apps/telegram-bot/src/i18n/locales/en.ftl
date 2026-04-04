@@ -171,17 +171,22 @@ menu-quiz = 🧠 Quiz
 menu-path = 💻 Dev Path
 menu-help = 📘 Help
 
-path-message =
-    💻 <b>Developer paths</b>
+path-menu-header =
+    💻 <b>Learning paths</b>
 
-    Choose a path to browse the most useful Solana topics.
-    You can also search directly with <code>/glossary &lt;term&gt;</code>.
-path-track-core = Protocol Basics
-path-track-dev = Programming Model
-path-track-tools = Dev Tools
-path-track-security = Security
-path-track-network = Network
-path-track-zk = ZK Compression
+    Choose a guided path and resume where you left off.
+    Each path shows your current progress.
+path-step-header = { $emoji } <b>{ $name }</b> · Step { $step }/{ $total }
+path-step-badge = { $current }/{ $total }
+path-completed = ✅ <b>Path completed!</b> You can review it, restart it, or take a quiz for this path.
+path-quiz = 🧠 Quiz this path
+path-restart = 🔄 Restart
+path-name-solana-basics = Solana Basics
+path-desc-solana-basics = Core Solana protocol concepts
+path-name-defi-foundations = DeFi Foundations
+path-desc-defi-foundations = Essential DeFi primitives
+path-name-builders-path = Builder's Path
+path-desc-builders-path = Core concepts for Solana builders
 
 language-changed = ✅ Language changed to English.
 language-invalid = ❌ Invalid language. Use: <code>/language pt | en | es</code>

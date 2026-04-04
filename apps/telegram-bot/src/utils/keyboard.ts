@@ -4,6 +4,7 @@ import type { GlossaryTerm } from "../glossary/index.js";
 import type { Category } from "../glossary/index.js";
 import type { MyContext } from "../context.js";
 import { db } from "../db/index.js";
+import type { LearningPath, PathProgress } from "../data/paths.js";
 
 /** Term card navigation: [Related] [Category] [Share] [Favorite] [Feedback] */
 export function buildTermKeyboard(
@@ -104,18 +105,73 @@ export function buildMainMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
     .text(t("menu-help"), "menu:help");
 }
 
-export function buildPathKeyboard(t: MyContext["t"]): InlineKeyboard {
-  return new InlineKeyboard()
-    .text(t("path-track-core"), "browse_cat:core-protocol")
-    .text(t("path-track-dev"), "browse_cat:programming-model")
-    .row()
-    .text(t("path-track-tools"), "browse_cat:dev-tools")
-    .text(t("path-track-security"), "browse_cat:security")
-    .row()
-    .text(t("path-track-network"), "browse_cat:network")
-    .text(t("path-track-zk"), "browse_cat:zk-compression")
-    .row()
-    .text(t("btn-back-menu"), "menu:main");
+export function buildPathMenuKeyboard(
+  paths: LearningPath[],
+  progressMap: Record<string, PathProgress>,
+  t: MyContext["t"],
+): InlineKeyboard {
+  const keyboard = new InlineKeyboard();
+
+  paths.forEach((path) => {
+    const progress = progressMap[path.id] ?? {
+      step: 0,
+      completed: false,
+      total: path.termIds.length,
+      started: false,
+    };
+    const current = progress.completed
+      ? progress.total
+      : progress.started
+        ? Math.min(progress.step + 1, progress.total)
+        : 0;
+    const progressBar = formatProgressBar(current, progress.total);
+    const label = `${path.emoji} ${t(path.nameKey)} [${progressBar}] ${current}/${progress.total}`;
+
+    keyboard.text(label, `path_select:${path.id}`).row();
+  });
+
+  keyboard.text(t("btn-back-menu"), "menu:main");
+  return keyboard;
+}
+
+export function buildPathStepKeyboard(
+  pathId: string,
+  step: number,
+  total: number,
+  termId: string,
+  isFav: boolean,
+  isLast: boolean,
+  t: MyContext["t"],
+): InlineKeyboard {
+  const keyboard = new InlineKeyboard();
+
+  if (step > 0) {
+    keyboard.text(t("btn-prev"), `path_step:${pathId}:${step - 1}`);
+  }
+
+  keyboard.text(t("path-step-badge", { current: step + 1, total }), "noop:");
+
+  if (!isLast) {
+    keyboard.text(t("btn-next"), `path_step:${pathId}:${step + 1}`);
+  }
+
+  keyboard.row();
+  keyboard.text(
+    isFav ? t("btn-fav-remove") : t("btn-fav-add"),
+    isFav
+      ? `path_fav_remove:${pathId}:${step}:${termId}`
+      : `path_fav_add:${pathId}:${step}:${termId}`,
+  );
+
+  if (isLast) {
+    keyboard.row();
+    keyboard.text(t("path-quiz"), `path_quiz:${pathId}`);
+    keyboard.text(t("path-restart"), `path_reset:${pathId}`);
+  }
+
+  keyboard.row();
+  keyboard.text(t("btn-back-menu"), "menu:path");
+  return keyboard;
 }
 
 function formatCategoryLabel(category: Category): string {
@@ -123,4 +179,10 @@ function formatCategoryLabel(category: Category): string {
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function formatProgressBar(current: number, total: number): string {
+  const width = 8;
+  const filled = total === 0 ? 0 : Math.round((current / total) * width);
+  return `${"█".repeat(filled)}${"░".repeat(width - filled)}`;
 }

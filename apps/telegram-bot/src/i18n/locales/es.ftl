@@ -171,17 +171,22 @@ menu-quiz = 🧠 Quiz
 menu-path = 💻 Ruta Dev
 menu-help = 📘 Ayuda
 
-path-message =
-    💻 <b>Rutas para desarrolladores</b>
+path-menu-header =
+    💻 <b>Rutas de aprendizaje</b>
 
-    Elige una ruta para navegar por los temas más útiles de Solana.
-    También puedes buscar directo con <code>/glosario &lt;término&gt;</code>.
-path-track-core = Base del Protocolo
-path-track-dev = Modelo de Programación
-path-track-tools = Dev Tools
-path-track-security = Seguridad
-path-track-network = Red
-path-track-zk = ZK Compression
+    Elige una ruta guiada y retoma donde te quedaste.
+    Cada ruta muestra tu progreso actual.
+path-step-header = { $emoji } <b>{ $name }</b> · Paso { $step }/{ $total }
+path-step-badge = { $current }/{ $total }
+path-completed = ✅ <b>¡Ruta completada!</b> Puedes repasarla, reiniciarla o hacer un quiz de esta ruta.
+path-quiz = 🧠 Quiz de la ruta
+path-restart = 🔄 Reiniciar
+path-name-solana-basics = Solana Basics
+path-desc-solana-basics = Fundamentos del protocolo Solana
+path-name-defi-foundations = DeFi Foundations
+path-desc-defi-foundations = Conceptos esenciales de DeFi
+path-name-builders-path = Builder's Path
+path-desc-builders-path = Conceptos clave para desarrolladores Solana
 
 language-changed = ✅ Idioma cambiado a español.
 language-invalid = ❌ Idioma inválido. Usa: <code>/idioma pt | en | es</code>

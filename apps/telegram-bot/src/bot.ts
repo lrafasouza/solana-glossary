@@ -32,6 +32,12 @@ import {
   handleCatPageCallback,
   handleNoopCallback,
   handleMenuCallback,
+  handlePathSelectCallback,
+  handlePathStepCallback,
+  handlePathQuizCallback,
+  handlePathResetCallback,
+  handlePathFavAddCallback,
+  handlePathFavRemoveCallback,
   handleFavAddCallback,
   handleFavRemoveCallback,
   handleQuizAnswerCallback,
@@ -114,6 +120,12 @@ bot.callbackQuery(/^browse_cat:/, handleBrowseCatCallback);
 bot.callbackQuery(/^cat_page:/, handleCatPageCallback);
 bot.callbackQuery(/^noop:/, handleNoopCallback);
 bot.callbackQuery(/^menu:/, handleMenuCallback);
+bot.callbackQuery(/^path_select:/, handlePathSelectCallback);
+bot.callbackQuery(/^path_step:/, handlePathStepCallback);
+bot.callbackQuery(/^path_quiz:/, handlePathQuizCallback);
+bot.callbackQuery(/^path_reset:/, handlePathResetCallback);
+bot.callbackQuery(/^path_fav_add:/, handlePathFavAddCallback);
+bot.callbackQuery(/^path_fav_remove:/, handlePathFavRemoveCallback);
 bot.callbackQuery(/^fav_add:/, handleFavAddCallback);
 bot.callbackQuery(/^fav_remove:/, handleFavRemoveCallback);
 bot.callbackQuery(/^quiz_answer:/, handleQuizAnswerCallback);
