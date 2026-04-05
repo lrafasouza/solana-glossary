@@ -101,8 +101,8 @@ export function buildMainMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
 
 export function buildTipsKeyboard(t: MyContext["t"]): InlineKeyboard {
   return new InlineKeyboard()
-    .text(t("tips-btn-explain"), "tips:explain")
     .text(t("tips-btn-glossary"), "tips:glossary")
+    .text(t("tips-btn-explain"), "tips:explain")
     .row()
     .text(t("tips-btn-quiz"), "tips:quiz")
     .text(t("tips-btn-path"), "tips:path")
@@ -118,8 +118,8 @@ export function buildTipsKeyboard(t: MyContext["t"]): InlineKeyboard {
 
 export function buildProgressMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
   return new InlineKeyboard()
-    .text(t("tips-btn-streak"), "tips:streak")
-    .text(t("tips-btn-leaderboard"), "tips:leaderboard")
+    .text(t("tips-btn-streak"), "menu:streak")
+    .text(t("tips-btn-leaderboard"), "menu:leaderboard")
     .row()
     .text(t("btn-back-menu"), "menu:main");
 }

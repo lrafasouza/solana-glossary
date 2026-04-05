@@ -32,6 +32,7 @@ import {
   updateQuizDraft,
 } from "../commands/quiz.js";
 import { helpCommand } from "../commands/help.js";
+import { explainCommand } from "../commands/explain.js";
 import { sendPathMenu, sendPathStep } from "../commands/path.js";
 import { db, GROUP_STREAK_THRESHOLD } from "../db/index.js";
 import type { MyContext, SessionData } from "../context.js";
@@ -219,17 +220,14 @@ export async function handleMenuCallback(ctx: MyContext): Promise<void> {
       await sendCategoriesMenu(ctx, true);
       return;
     case "glossary":
+      ctx.session.awaitingGlossaryQuery = false;
       ctx.match = "";
       await glossaryCommand(ctx);
       return;
     case "explain":
-      await ctx.editMessageText(
-        ctx.t("tips-explain", { bot_username: ctx.me.username }),
-        {
-          parse_mode: "HTML",
-          reply_markup: buildTipsKeyboard(ctx.t.bind(ctx)),
-        },
-      );
+      ctx.session.awaitingGlossaryQuery = false;
+      ctx.match = "";
+      await explainCommand(ctx);
       return;
     case "random":
       ctx.session.awaitingGlossaryQuery = false;
@@ -256,6 +254,18 @@ export async function handleMenuCallback(ctx: MyContext): Promise<void> {
     case "quiz":
       ctx.session.awaitingGlossaryQuery = false;
       await sendQuizMenu(ctx, true);
+      return;
+    case "streak":
+      ctx.session.awaitingGlossaryQuery = false;
+      await import("../commands/streak.js").then(({ streakCommand }) =>
+        streakCommand(ctx),
+      );
+      return;
+    case "leaderboard":
+      ctx.session.awaitingGlossaryQuery = false;
+      await import("../commands/leaderboard.js").then(
+        ({ leaderboardCommand }) => leaderboardCommand(ctx),
+      );
       return;
     case "progress":
       await ctx.editMessageText(ctx.t("progress-menu-title"), {

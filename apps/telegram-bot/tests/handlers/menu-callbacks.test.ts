@@ -21,7 +21,11 @@ vi.mock("../../src/utils/term-card.js", () => ({
 }));
 
 import { handleMenuCallback } from "../../src/handlers/callbacks.js";
-import { buildMainMenuKeyboard } from "../../src/utils/keyboard.js";
+import {
+  buildMainMenuKeyboard,
+  buildProgressMenuKeyboard,
+  buildTipsKeyboard,
+} from "../../src/utils/keyboard.js";
 
 describe("menu callbacks", () => {
   beforeEach(() => {
@@ -49,5 +53,50 @@ describe("menu callbacks", () => {
   it("keeps glossary as the first menu action", () => {
     const keyboard = buildMainMenuKeyboard(((key: string) => key) as any);
     expect((keyboard as any).inline_keyboard[0][0].text).toBe("menu-glossary");
+  });
+
+  it("uses menu callbacks for progress actions", () => {
+    const keyboard = buildProgressMenuKeyboard(((key: string) => key) as any);
+    expect((keyboard as any).inline_keyboard[0][0].callback_data).toBe(
+      "menu:streak",
+    );
+    expect((keyboard as any).inline_keyboard[0][1].callback_data).toBe(
+      "menu:leaderboard",
+    );
+  });
+
+  it("keeps glossary as the first help action", () => {
+    const keyboard = buildTipsKeyboard(((key: string) => key) as any);
+    expect((keyboard as any).inline_keyboard[0][0].callback_data).toBe(
+      "tips:glossary",
+    );
+    expect((keyboard as any).inline_keyboard[0][1].callback_data).toBe(
+      "tips:explain",
+    );
+  });
+
+  it("routes menu explain to the real command flow instead of tips", async () => {
+    const ctx = createMockCtx({ match: "menu:explain", chatType: "private" });
+    await handleMenuCallback(ctx);
+    expect(ctx.editMessageText).not.toHaveBeenCalled();
+    expect(ctx.reply).toHaveBeenCalledOnce();
+    const [text] = (ctx.reply as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(text).toBe("[explain-no-reply]");
+  });
+
+  it("routes menu streak to the real command flow", async () => {
+    const ctx = createMockCtx({ match: "menu:streak" });
+    await handleMenuCallback(ctx);
+    expect(ctx.reply).toHaveBeenCalledOnce();
+    const [text] = (ctx.reply as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(text).toContain("[streak-message]");
+  });
+
+  it("routes menu leaderboard to the real command flow", async () => {
+    const ctx = createMockCtx({ match: "menu:leaderboard" });
+    await handleMenuCallback(ctx);
+    expect(ctx.reply).toHaveBeenCalledOnce();
+    const [text] = (ctx.reply as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(text).toContain("[leaderboard-empty]");
   });
 });
