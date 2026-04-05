@@ -1,4 +1,3 @@
-// src/commands/language.ts
 import type { MyContext, SessionData } from "../context.js";
 
 const VALID_LANGUAGES = ["pt", "en", "es"] as const;
@@ -17,14 +16,8 @@ export async function languageCommand(ctx: MyContext): Promise<void> {
   }
 
   ctx.session.language = input as SessionData["language"];
-
-  // Confirm in the chosen language directly because localeNegotiator
-  // only applies the new session language on the next request.
-  const confirmations: Record<Lang, string> = {
-    pt: `✅ Idioma alterado para português.\n\nℹ️ <i>O menu de comandos (/) continua no idioma do seu app Telegram. Use /help para ver todos os comandos em português.</i>`,
-    en: `✅ Language changed to English.\n\nℹ️ <i>The command menu (/) follows your Telegram app language. Use /help to see all commands in English.</i>`,
-    es: `✅ Idioma cambiado a español.\n\nℹ️ <i>El menú de comandos (/) sigue el idioma de tu app de Telegram. Usa /help para ver todos los comandos en español.</i>`,
-  };
-
-  await ctx.reply(confirmations[input], { parse_mode: "HTML" });
+  await ctx.i18n.useLocale(input);
+  await ctx.reply(ctx.t("language-changed-confirmation"), {
+    parse_mode: "HTML",
+  });
 }

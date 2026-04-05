@@ -14,6 +14,16 @@ export interface QuizSession {
   termId: string;
   correctIdx: number;
   options: string[];
+  mode: "single" | "round";
+  difficultyKey: "all" | "easy" | "medium" | "hard" | "1" | "2" | "3" | "4" | "5";
+  totalQuestions: number;
+  currentQuestion: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  failureMode: "continue" | "sudden_death";
+  remainingTermIds: string[];
+  askedTermIds: string[];
+  poolTermIds: string[];
 }
 
 export interface StoredPathProgress {
@@ -908,17 +918,17 @@ class DatabaseWrapper {
   }
 
   // Quiz
-  saveQuizSession(
-    userId: number,
-    termId: string,
-    correctIdx: number,
-    options: string[],
-  ): void {
+  saveQuizSession(userId: number, session: QuizSession): void {
     this.db
       .prepare(
         "INSERT INTO quiz_sessions (user_id, term_id, correct_idx, options) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET term_id = excluded.term_id, correct_idx = excluded.correct_idx, options = excluded.options",
       )
-      .run(userId, termId, correctIdx, JSON.stringify(options));
+      .run(
+        userId,
+        session.termId,
+        session.correctIdx,
+        JSON.stringify(session),
+      );
   }
 
   getQuizSession(userId: number): QuizSession | undefined {
@@ -930,10 +940,38 @@ class DatabaseWrapper {
       | { term_id: string; correct_idx: number; options: string }
       | undefined;
     if (!row) return undefined;
+    const parsed = JSON.parse(row.options) as QuizSession | string[];
+    if (Array.isArray(parsed)) {
+      return {
+        termId: row.term_id,
+        correctIdx: row.correct_idx,
+        options: parsed,
+        mode: "single",
+        difficultyKey: "all",
+        totalQuestions: 1,
+        currentQuestion: 1,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        failureMode: "continue",
+        remainingTermIds: [],
+        askedTermIds: [row.term_id],
+        poolTermIds: parsed,
+      };
+    }
     return {
-      termId: row.term_id,
-      correctIdx: row.correct_idx,
-      options: JSON.parse(row.options),
+      termId: parsed.termId ?? row.term_id,
+      correctIdx: parsed.correctIdx ?? row.correct_idx,
+      options: parsed.options ?? [],
+      mode: parsed.mode ?? "single",
+      difficultyKey: parsed.difficultyKey ?? "all",
+      totalQuestions: parsed.totalQuestions ?? 1,
+      currentQuestion: parsed.currentQuestion ?? 1,
+      correctAnswers: parsed.correctAnswers ?? 0,
+      wrongAnswers: parsed.wrongAnswers ?? 0,
+      failureMode: parsed.failureMode ?? "continue",
+      remainingTermIds: parsed.remainingTermIds ?? [],
+      askedTermIds: parsed.askedTermIds ?? [row.term_id],
+      poolTermIds: parsed.poolTermIds ?? parsed.options ?? [],
     };
   }
 

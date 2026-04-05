@@ -13,9 +13,12 @@ export function createMockCtx(options?: {
   const opts = options ?? {};
   return {
     reply: vi.fn().mockResolvedValue(undefined),
+    replyWithPhoto: vi.fn().mockResolvedValue(undefined),
     answerInlineQuery: vi.fn().mockResolvedValue(undefined),
     answerCallbackQuery: vi.fn().mockResolvedValue(undefined),
     editMessageText: vi.fn().mockResolvedValue(undefined),
+    editMessageReplyMarkup: vi.fn().mockResolvedValue(undefined),
+    deleteMessage: vi.fn().mockResolvedValue(undefined),
     me: { username: "SolanaGlossaryBot" },
     from: {
       id: 123,
@@ -31,7 +34,7 @@ export function createMockCtx(options?: {
         ? { text: opts.replyToText }
         : undefined,
     },
-    session: { language: opts.sessionLanguage },
+    session: { language: opts.sessionLanguage, quizDraft: undefined },
     inlineQuery: {
       query: opts.match ?? "",
       id: "test-inline-id",

@@ -6,19 +6,16 @@ import { IMAGES } from "../config.js";
 import type { MyContext } from "../context.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 
-const LANGUAGE_PICKER = `🌐 <b>Choose your language</b>
-Escolha seu idioma
-Elige tu idioma`;
-
-const languageKeyboard = new InlineKeyboard()
-  .text("🇧🇷 Português", "lang:pt")
-  .text("🇺🇸 English", "lang:en")
-  .text("🇪🇸 Español", "lang:es");
+function buildLanguageKeyboard(ctx: MyContext): InlineKeyboard {
+  return new InlineKeyboard()
+    .text(ctx.t("start-language-option-pt"), "lang:pt")
+    .text(ctx.t("start-language-option-en"), "lang:en")
+    .text(ctx.t("start-language-option-es"), "lang:es");
+}
 
 export async function startCommand(ctx: MyContext): Promise<void> {
   const deepLink = (ctx.match as string).trim();
 
-  // Deep link: /start proof-of-history → show term directly
   if (deepLink) {
     const result = lookupTerm(deepLink);
     if (result.type === "found") {
@@ -40,25 +37,25 @@ export async function startCommand(ctx: MyContext): Promise<void> {
     }
   }
 
-  // New user — no language set yet → show onboarding picker with image
   if (!ctx.session.language) {
+    const caption = ctx.t("start-language-picker");
+    const reply_markup = buildLanguageKeyboard(ctx);
+
     try {
       await ctx.replyWithPhoto(IMAGES.languagePicker, {
-        caption: LANGUAGE_PICKER,
+        caption,
         parse_mode: "HTML",
-        reply_markup: languageKeyboard,
+        reply_markup,
       });
-    } catch (err) {
-      // Fallback to text-only if image fails
-      await ctx.reply(LANGUAGE_PICKER, {
+    } catch {
+      await ctx.reply(caption, {
         parse_mode: "HTML",
-        reply_markup: languageKeyboard,
+        reply_markup,
       });
     }
     return;
   }
 
-  // Returning user — show welcome with optional banner
   await sendWelcome(ctx);
 }
 
@@ -68,8 +65,6 @@ export async function sendWelcome(ctx: MyContext): Promise<void> {
     parse_mode: "HTML",
     reply_markup: buildMainMenuKeyboard(ctx.t.bind(ctx)),
   });
-
-  // Send onboarding tips as follow-up
   await ctx.reply(ctx.t("onboarding-tips"), { parse_mode: "HTML" });
 }
 

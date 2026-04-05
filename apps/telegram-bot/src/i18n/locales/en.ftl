@@ -352,3 +352,47 @@ tips-help =
     📘 <b>How to use /help</b>
 
     Send <code>/help</code> to see all main commands organized by use case.
+
+quiz-menu-title = 🧠 <b>Quiz Setup</b>
+quiz-menu-mode = Mode
+quiz-menu-mode-single = 1 question
+quiz-menu-mode-round = Round
+quiz-menu-difficulty = Difficulty
+quiz-menu-difficulty-all = Any
+quiz-menu-difficulty-easy = Easy
+quiz-menu-difficulty-medium = Medium
+quiz-menu-difficulty-hard = Hard
+quiz-menu-difficulty-level = Level { $level }
+quiz-menu-count = Questions
+quiz-menu-failure = On wrong answer
+quiz-menu-failure-continue = Keep going
+quiz-menu-failure-sudden-death = Elimination
+quiz-menu-start = ▶️ Start
+quiz-menu-group-note = Groups use the fast mode: one question at a time to avoid spam.
+quiz-round-progress = 🎯 <b>Question { $current }/{ $total }</b> · ✅ { $correct } · ❌ { $wrong } · { $mode }
+quiz-round-count-adjusted = ⚠️ I adjusted the round from <b>{ $requested }</b> to <b>{ $available }</b> questions based on the available pool.
+quiz-round-feedback-correct = ✅ Correct! It was <b>{ $term }</b>.
+quiz-round-feedback-correct-streak = ✅ Correct! It was <b>{ $term }</b>. 🔥 Streak: <b>{ $current }</b>
+quiz-round-feedback-wrong = ❌ Wrong. The correct answer was <b>{ $term }</b>.
+quiz-round-summary =
+    🏁 <b>Round finished</b>
+
+    Questions answered: <b>{ $answered }/{ $total }</b>
+    Correct: <b>{ $correct }</b>
+    Wrong: <b>{ $wrong }</b>
+    Accuracy: <b>{ $accuracy }%</b>
+    Difficulty: <b>{ $difficulty }</b>
+quiz-btn-play-again = 🔁 Play Again
+quiz-btn-menu = ⚙️ Quiz Menu
+
+language-changed-confirmation =
+    ✅ Language changed to English.
+
+    ℹ️ <i>The command menu (/) follows your Telegram app language. Use /help to see all commands in English.</i>
+
+start-language-picker =
+    🌐 <b>Choose your language</b>
+    Choose your language below.
+start-language-option-pt = 🇧🇷 Portuguese
+start-language-option-en = 🇺🇸 English
+start-language-option-es = 🇪🇸 Spanish

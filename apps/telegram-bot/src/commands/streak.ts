@@ -1,5 +1,6 @@
 import { db, GROUP_STREAK_THRESHOLD } from "../db/index.js";
 import type { MyContext } from "../context.js";
+import { getBotDate } from "../utils/date.js";
 
 export async function streakCommand(ctx: MyContext): Promise<void> {
   const userId = ctx.from?.id;
@@ -52,9 +53,7 @@ function buildGroupStreakSection(
 ): string {
   db.maybeResetGroupStreak(chatId);
   const groupStreak = db.getOrCreateGroupStreak(chatId);
-  const today = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "America/Sao_Paulo",
-  }).format(new Date());
+  const today = getBotDate();
   const participantsToday = db.getGroupDailyParticipants(chatId, today);
   const hasParticipation = db.hasGroupMembership(chatId, userId);
   const calendar = db

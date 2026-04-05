@@ -44,8 +44,15 @@ import {
   handleFavAddCallback,
   handleFavRemoveCallback,
   handleQuizAnswerCallback,
+  handleQuizCountCallback,
+  handleQuizDifficultyCallback,
+  handleQuizFailureModeCallback,
+  handleQuizMenuCallback,
+  handleQuizModeCallback,
+  handleQuizRoundAnswerCallback,
   handleQuizRetryCallback,
   handleQuizResultCallback,
+  handleQuizStartCallback,
   handleFeedbackCallback,
 } from "./handlers/callbacks.js";
 import { handleInlineQuery } from "./handlers/inline.js";
@@ -65,6 +72,7 @@ bot.use(
     initial: (): SessionData => ({
       language: undefined,
       awaitingGlossaryQuery: false,
+      quizDraft: undefined,
     }),
     getSessionKey: (ctx) => ctx.from?.id.toString(),
   }),
@@ -135,7 +143,14 @@ bot.callbackQuery(/^path_fav_add:/, handlePathFavAddCallback);
 bot.callbackQuery(/^path_fav_remove:/, handlePathFavRemoveCallback);
 bot.callbackQuery(/^fav_add:/, handleFavAddCallback);
 bot.callbackQuery(/^fav_remove:/, handleFavRemoveCallback);
+bot.callbackQuery(/^quiz_menu$/, handleQuizMenuCallback);
+bot.callbackQuery(/^quiz_mode:/, handleQuizModeCallback);
+bot.callbackQuery(/^quiz_diff:/, handleQuizDifficultyCallback);
+bot.callbackQuery(/^quiz_count:/, handleQuizCountCallback);
+bot.callbackQuery(/^quiz_fail:/, handleQuizFailureModeCallback);
+bot.callbackQuery(/^quiz_start$/, handleQuizStartCallback);
 bot.callbackQuery(/^quiz_answer:/, handleQuizAnswerCallback);
+bot.callbackQuery(/^quiz_round_answer:/, handleQuizRoundAnswerCallback);
 bot.callbackQuery(/^quiz_retry$/, handleQuizRetryCallback);
 bot.callbackQuery(/^quiz_result$/, handleQuizResultCallback);
 bot.callbackQuery(/^feedback:/, handleFeedbackCallback);

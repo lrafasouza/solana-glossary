@@ -1,6 +1,6 @@
 // src/handlers/inline.ts
 import { InlineQueryResultBuilder } from "grammy";
-import { lookupTerm, getRandomTerms } from "../utils/search.js";
+import { lookupTerm, getRandomTerms, findClosest } from "../utils/search.js";
 import { formatTermCard } from "../utils/format.js";
 import type { GlossaryTerm } from "../glossary/index.js";
 import type { MyContext } from "../context.js";
@@ -12,7 +12,7 @@ function buildInlineResult(term: GlossaryTerm, t: MyContext["t"]) {
   const card = formatTermCard(term, t);
   return InlineQueryResultBuilder.article(term.id, term.term, {
     description: term.definition.slice(0, 120),
-  }).text(card, { parse_mode: "HTML" });
+  }).text(card, { parse_mode: "HTML" } as any);
 }
 
 export async function handleInlineQuery(ctx: MyContext): Promise<void> {
@@ -26,7 +26,8 @@ export async function handleInlineQuery(ctx: MyContext): Promise<void> {
   } else {
     const result = lookupTerm(query);
     if (result.type === "not-found") {
-      terms = [];
+      const suggestion = findClosest(query);
+      terms = suggestion ? [suggestion] : [];
     } else if (result.type === "found") {
       terms = [result.term];
     } else {

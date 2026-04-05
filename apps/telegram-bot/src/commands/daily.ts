@@ -4,14 +4,12 @@ import { buildTermKeyboard } from "../utils/keyboard.js";
 import { db } from "../db/index.js";
 import type { MyContext } from "../context.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
+import { getBotDate } from "../utils/date.js";
 
-/** Returns the same term for every user on a given day (date-based seed) */
-function getDailyTerm() {
-  const today = new Date();
-  const seed =
-    today.getFullYear() * 10000 +
-    (today.getMonth() + 1) * 100 +
-    today.getDate();
+/** Returns the same term for every user on the app's canonical day. */
+export function getDailyTerm(date: Date = new Date()) {
+  const [year, month, day] = getBotDate(date).split("-").map(Number);
+  const seed = year * 10000 + month * 100 + day;
   return allTerms[seed % allTerms.length];
 }
 
@@ -23,21 +21,18 @@ export async function dailyTermCommand(ctx: MyContext): Promise<void> {
   if (userId) {
     const { streak, isNew } = db.viewDailyTerm(userId);
     if (isNew) {
-      // First time viewing today's term
-      if (streak === 1) {
-        streakText = ctx.t("streak-first");
-      } else {
-        streakText = ctx.t("streak-days", { count: streak });
-      }
+      streakText =
+        streak === 1
+          ? ctx.t("streak-first")
+          : ctx.t("streak-days", { count: streak });
     } else {
-      // Already viewed today, just show current streak
       streakText = ctx.t("streak-days", { count: streak });
     }
   }
 
   const header = streakText
-    ? `📅 <b>${ctx.t("daily-term-header")}</b>  ${streakText}\n\n`
-    : `📅 <b>${ctx.t("daily-term-header")}</b>\n\n`;
+    ? `📆 <b>${ctx.t("daily-term-header")}</b>  ${streakText}\n\n`
+    : `📆 <b>${ctx.t("daily-term-header")}</b>\n\n`;
 
   const card = await buildEnrichedTermCard(
     term,

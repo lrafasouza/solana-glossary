@@ -351,3 +351,49 @@ tips-help =
     📘 <b>Como usar /help</b>
 
     Envie <code>/help</code> para ver todos os comandos principais organizados por caso de uso.
+
+quiz-menu-title = 🧠 <b>Configurar Quiz</b>
+quiz-menu-mode = Modo
+quiz-menu-mode-single = 1 pergunta
+quiz-menu-mode-round = Rodada
+quiz-menu-difficulty = Dificuldade
+quiz-menu-difficulty-all = Qualquer
+quiz-menu-difficulty-easy = Fácil
+quiz-menu-difficulty-medium = Médio
+quiz-menu-difficulty-hard = Difícil
+quiz-menu-difficulty-level = Nível { $level }
+quiz-menu-count = Perguntas
+quiz-menu-failure = Ao errar
+quiz-menu-failure-continue = Continuar
+quiz-menu-failure-sudden-death = Eliminação
+quiz-menu-start = ▶️ Começar
+quiz-menu-group-note = Em grupos o quiz fica no modo rápido: uma pergunta por vez para evitar spam.
+quiz-round-progress = 🎯 <b>Pergunta { $current }/{ $total }</b> · ✅ { $correct } · ❌ { $wrong } · { $mode }
+quiz-round-count-adjusted = ⚠️ Ajustei a rodada de <b>{ $requested }</b> para <b>{ $available }</b> perguntas com base no pool disponível.
+quiz-round-feedback-correct = ✅ Correto! Era <b>{ $term }</b>.
+quiz-round-feedback-correct-streak = ✅ Correto! Era <b>{ $term }</b>. 🔥 Streak: <b>{ $current }</b>
+quiz-round-feedback-wrong = ❌ Errado. A resposta certa era <b>{ $term }</b>.
+quiz-round-summary =
+    🏁 <b>Rodada finalizada</b>
+
+    Perguntas respondidas: <b>{ $answered }/{ $total }</b>
+    Acertos: <b>{ $correct }</b>
+    Erros: <b>{ $wrong }</b>
+    Aproveitamento: <b>{ $accuracy }%</b>
+    Dificuldade: <b>{ $difficulty }</b>
+quiz-btn-play-again = 🔁 Jogar de novo
+quiz-btn-menu = ⚙️ Menu do Quiz
+
+quiz-wrong = ❌ <b>Errado.</b> A resposta era <b>{ $term }</b>.
+
+language-changed-confirmation =
+    ✅ Idioma alterado para português.
+
+    ℹ️ <i>O menu de comandos (/) continua no idioma do seu app Telegram. Use /help para ver todos os comandos em português.</i>
+
+start-language-picker =
+    🌐 <b>Escolha seu idioma</b>
+    Escolha abaixo o idioma da interface do bot.
+start-language-option-pt = 🇧🇷 Português
+start-language-option-en = 🇺🇸 English
+start-language-option-es = 🇪🇸 Español

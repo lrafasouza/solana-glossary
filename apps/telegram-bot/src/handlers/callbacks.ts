@@ -17,8 +17,14 @@ import { glossaryCommand } from "../commands/glossary.js";
 import { randomTermCommand } from "../commands/random.js";
 import {
   buildQuizQuestionText,
-  quizCommand,
+  buildQuizRetryKeyboard,
+  buildQuizRoundQuestionText,
+  buildQuizRoundSummaryKeyboard,
+  buildNextRoundSession,
+  sendQuizMenu,
   sendQuiz,
+  startQuizFromDraft,
+  updateQuizDraft,
 } from "../commands/quiz.js";
 import { helpCommand } from "../commands/help.js";
 import { sendPathMenu, sendPathStep } from "../commands/path.js";
@@ -34,6 +40,10 @@ function stripHtml(text: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
+}
+
+async function answerInvalidCallback(ctx: MyContext): Promise<void> {
+  await ctx.answerCallbackQuery({ text: ctx.t("internal-error") });
 }
 
 // ── Language onboarding ───────────────────────────────────────────────────────
@@ -148,7 +158,7 @@ export async function handleCatPageCallback(ctx: MyContext): Promise<void> {
   const data = ctx.callbackQuery?.data ?? "";
   const match = data.match(/^cat_page:(.+):(\d+)$/);
   if (!match) {
-    await ctx.answerCallbackQuery({ text: "Invalid callback" });
+    await answerInvalidCallback(ctx);
     return;
   }
 
@@ -197,7 +207,7 @@ export async function handleMenuCallback(ctx: MyContext): Promise<void> {
       return;
     case "quiz":
       ctx.session.awaitingGlossaryQuery = false;
-      await quizCommand(ctx);
+      await sendQuizMenu(ctx, true);
       return;
     case "help":
       ctx.session.awaitingGlossaryQuery = false;
@@ -265,7 +275,7 @@ export async function handlePathStepCallback(ctx: MyContext): Promise<void> {
   const match = data.match(/^path_step:(.+):(\d+)$/);
 
   if (!match) {
-    await ctx.answerCallbackQuery({ text: "Invalid callback" });
+    await answerInvalidCallback(ctx);
     return;
   }
 
@@ -303,6 +313,81 @@ export async function handlePathQuizCallback(ctx: MyContext): Promise<void> {
 
   await ctx.answerCallbackQuery();
   await sendQuiz(ctx, pool);
+}
+
+export async function handleQuizMenuCallback(ctx: MyContext): Promise<void> {
+  await ctx.answerCallbackQuery();
+  await sendQuizMenu(ctx, true);
+}
+
+export async function handleQuizModeCallback(ctx: MyContext): Promise<void> {
+  const mode = (ctx.callbackQuery?.data ?? "").slice("quiz_mode:".length);
+  if (mode !== "single" && mode !== "round") {
+    await answerInvalidCallback(ctx);
+    return;
+  }
+
+  await ctx.answerCallbackQuery();
+  updateQuizDraft(ctx, { mode });
+  await sendQuizMenu(ctx, true);
+}
+
+export async function handleQuizDifficultyCallback(
+  ctx: MyContext,
+): Promise<void> {
+  const difficultyKey = (ctx.callbackQuery?.data ?? "").slice(
+    "quiz_diff:".length,
+  );
+  const allowed = new Set(["all", "easy", "medium", "hard", "1", "2", "3", "4", "5"]);
+  if (!allowed.has(difficultyKey)) {
+    await answerInvalidCallback(ctx);
+    return;
+  }
+
+  await ctx.answerCallbackQuery();
+  updateQuizDraft(ctx, {
+    difficultyKey: difficultyKey as NonNullable<SessionData["quizDraft"]>["difficultyKey"],
+  });
+  await sendQuizMenu(ctx, true);
+}
+
+export async function handleQuizCountCallback(ctx: MyContext): Promise<void> {
+  const questionCount = Number(
+    (ctx.callbackQuery?.data ?? "").slice("quiz_count:".length),
+  );
+  if (questionCount !== 3 && questionCount !== 5 && questionCount !== 10) {
+    await answerInvalidCallback(ctx);
+    return;
+  }
+
+  await ctx.answerCallbackQuery();
+  updateQuizDraft(ctx, {
+    questionCount: questionCount as 3 | 5 | 10,
+  });
+  await sendQuizMenu(ctx, true);
+}
+
+export async function handleQuizFailureModeCallback(
+  ctx: MyContext,
+): Promise<void> {
+  const failureMode = (ctx.callbackQuery?.data ?? "").slice(
+    "quiz_fail:".length,
+  );
+  if (failureMode !== "continue" && failureMode !== "sudden_death") {
+    await answerInvalidCallback(ctx);
+    return;
+  }
+
+  await ctx.answerCallbackQuery();
+  updateQuizDraft(ctx, {
+    failureMode: failureMode as "continue" | "sudden_death",
+  });
+  await sendQuizMenu(ctx, true);
+}
+
+export async function handleQuizStartCallback(ctx: MyContext): Promise<void> {
+  await ctx.answerCallbackQuery();
+  await startQuizFromDraft(ctx);
 }
 
 export async function handlePathResetCallback(ctx: MyContext): Promise<void> {
@@ -426,8 +511,16 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
+  if (session.mode !== "single") {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
   const data = ctx.callbackQuery?.data ?? "";
-  const answerIdx = parseInt(data.slice("quiz_answer:".length), 10);
+  const answerMatch = data.match(/^quiz_answer:(\d+):(\d+)$/);
+  const answerIdx = answerMatch
+    ? parseInt(answerMatch[2] ?? "0", 10)
+    : parseInt(data.slice("quiz_answer:".length), 10);
   const isCorrect = answerIdx === session.correctIdx;
 
   // Acknowledge the callback immediately — Telegram requires this within ~3s.
@@ -583,13 +676,9 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const keyboard = new InlineKeyboard()
-      .text(ctx.t("quiz-btn-retry"), "quiz_retry")
-      .text(ctx.t("quiz-btn-result"), "quiz_result");
-
     await ctx.reply(ctx.t("quiz-wrong-retry"), {
       parse_mode: "HTML",
-      reply_markup: keyboard,
+      reply_markup: buildQuizRetryKeyboard(ctx),
     });
     // Don't clear session yet - user might want to retry
     return;
@@ -628,22 +717,22 @@ export async function handleQuizRetryCallback(ctx: MyContext): Promise<void> {
   const keyboard = new InlineKeyboard()
     .text(
       ctx.t("quiz-option-a", { term: options[0]?.term ?? "" }),
-      `quiz_answer:0`,
+      `quiz_answer:${session.currentQuestion}:0`,
     )
     .row()
     .text(
       ctx.t("quiz-option-b", { term: options[1]?.term ?? "" }),
-      `quiz_answer:1`,
+      `quiz_answer:${session.currentQuestion}:1`,
     )
     .row()
     .text(
       ctx.t("quiz-option-c", { term: options[2]?.term ?? "" }),
-      `quiz_answer:2`,
+      `quiz_answer:${session.currentQuestion}:2`,
     )
     .row()
     .text(
       ctx.t("quiz-option-d", { term: options[3]?.term ?? "" }),
-      `quiz_answer:3`,
+      `quiz_answer:${session.currentQuestion}:3`,
     );
 
   await ctx.reply(ctx.t("quiz-try-again"), { parse_mode: "HTML" });
@@ -664,6 +753,11 @@ export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
 
   const session = db.getQuizSession(userId);
   if (!session) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  if (session.mode !== "single") {
     await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
     return;
   }
@@ -694,6 +788,170 @@ export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
 }
 
 // ── Feedback ──────────────────────────────────────────────────────────────────
+
+export async function handleQuizRoundAnswerCallback(
+  ctx: MyContext,
+): Promise<void> {
+  const userId = ctx.from?.id;
+  if (!userId) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  const session = db.getQuizSession(userId);
+  if (!session || session.mode !== "round") {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  const match = (ctx.callbackQuery?.data ?? "").match(
+    /^quiz_round_answer:(\d+):(\d+)$/,
+  );
+  if (!match) {
+    await answerInvalidCallback(ctx);
+    return;
+  }
+
+  const questionNumber = parseInt(match[1] ?? "0", 10);
+  const answerIdx = parseInt(match[2] ?? "0", 10);
+  if (questionNumber !== session.currentQuestion) {
+    await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
+    return;
+  }
+
+  await ctx.answerCallbackQuery();
+  await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+
+  const correctTerm = getTerm(session.options[session.correctIdx]);
+  const isCorrect = answerIdx === session.correctIdx;
+
+  if (isCorrect) {
+    const streak = db.incrementStreak(userId);
+    await ctx.reply(
+      ctx.t(
+        streak.isNewRecord || streak.current > 1
+          ? "quiz-round-feedback-correct-streak"
+          : "quiz-round-feedback-correct",
+        {
+          term: correctTerm?.term ?? "",
+          current: streak.current,
+        },
+      ),
+      { parse_mode: "HTML" },
+    );
+
+    const { scheduleStreakWarning } =
+      await import("../scheduler/notifications.js");
+    scheduleStreakWarning(userId);
+    session.correctAnswers += 1;
+  } else {
+    session.wrongAnswers += 1;
+    await ctx.reply(
+      ctx.t("quiz-round-feedback-wrong", {
+        term: correctTerm?.term ?? "",
+      }),
+      { parse_mode: "HTML" },
+    );
+  }
+
+  updateQuizDraft(ctx, {
+    mode: "round",
+    difficultyKey: session.difficultyKey,
+    questionCount:
+      session.totalQuestions === 10
+        ? 10
+        : session.totalQuestions === 3
+          ? 3
+          : 5,
+    failureMode: session.failureMode,
+  });
+
+  const roundEnded =
+    session.currentQuestion >= session.totalQuestions ||
+    (!isCorrect && session.failureMode === "sudden_death");
+
+  if (roundEnded) {
+    db.clearQuizSession(userId);
+    const answered = session.correctAnswers + session.wrongAnswers;
+    const accuracy =
+      answered === 0
+        ? 0
+        : Math.round((session.correctAnswers / answered) * 100);
+    await ctx.reply(
+      ctx.t("quiz-round-summary", {
+        answered,
+        total: session.totalQuestions,
+        correct: session.correctAnswers,
+        wrong: session.wrongAnswers,
+        accuracy,
+        difficulty:
+          session.difficultyKey === "all"
+            ? ctx.t("quiz-menu-difficulty-all")
+            : session.difficultyKey === "easy"
+              ? ctx.t("quiz-menu-difficulty-easy")
+              : session.difficultyKey === "medium"
+                ? ctx.t("quiz-menu-difficulty-medium")
+                : session.difficultyKey === "hard"
+                  ? ctx.t("quiz-menu-difficulty-hard")
+                  : ctx.t("quiz-menu-difficulty-level", {
+                      level: session.difficultyKey,
+                    }),
+      }),
+      {
+        parse_mode: "HTML",
+        reply_markup: buildQuizRoundSummaryKeyboard(ctx),
+      },
+    );
+    return;
+  }
+
+  const nextSession = buildNextRoundSession(session);
+  if (!nextSession) {
+    db.clearQuizSession(userId);
+    await ctx.reply(ctx.t("internal-error"));
+    return;
+  }
+
+  db.saveQuizSession(userId, nextSession);
+  const nextTerm = getTerm(nextSession.termId);
+  if (!nextTerm) {
+    db.clearQuizSession(userId);
+    await ctx.reply(ctx.t("internal-error"));
+    return;
+  }
+
+  await ctx.reply(buildQuizRoundQuestionText(ctx, nextSession, nextTerm), {
+    parse_mode: "HTML",
+    reply_markup: new InlineKeyboard()
+      .text(
+        ctx.t("quiz-option-a", {
+          term: getTerm(nextSession.options[0])?.term ?? "",
+        }),
+        `quiz_round_answer:${nextSession.currentQuestion}:0`,
+      )
+      .row()
+      .text(
+        ctx.t("quiz-option-b", {
+          term: getTerm(nextSession.options[1])?.term ?? "",
+        }),
+        `quiz_round_answer:${nextSession.currentQuestion}:1`,
+      )
+      .row()
+      .text(
+        ctx.t("quiz-option-c", {
+          term: getTerm(nextSession.options[2])?.term ?? "",
+        }),
+        `quiz_round_answer:${nextSession.currentQuestion}:2`,
+      )
+      .row()
+      .text(
+        ctx.t("quiz-option-d", {
+          term: getTerm(nextSession.options[3])?.term ?? "",
+        }),
+        `quiz_round_answer:${nextSession.currentQuestion}:3`,
+      ),
+  });
+}
 
 export async function handleFeedbackCallback(ctx: MyContext): Promise<void> {
   await ctx.answerCallbackQuery({ text: ctx.t("feedback-thanks") });
