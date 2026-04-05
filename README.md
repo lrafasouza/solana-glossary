@@ -454,6 +454,16 @@ Group onboarding shows the bot working as a community tool, not just a private a
 
 ![Group Onboarding](./Imagens/Group.png)
 
+## Submission Notes
+
+### Brief Summary
+
+I built a Telegram-native Solana Glossary Bot that turns the glossary into a live onboarding and learning product instead of a static reference page. The bot supports direct lookup in DMs, guided learning paths, quizzes, favorites, streaks, and multilingual usage in English, Portuguese, and Spanish. In groups, it adds contextual learning with reply-based `/explain`, local leaderboards, and onboarding flows that help communities teach new members without leaving the conversation. The project also includes inline sharing, production deployment, and a documented demo flow with screenshots.
+
+### Twitter Post
+
+soon
+
 ## Contributing
 
 See `CONTRIBUTING.md` for glossary data contribution rules, validation steps, and category conventions.
