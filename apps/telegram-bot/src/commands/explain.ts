@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import type { GlossaryTerm } from "../glossary/index.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { findClosest, findTermsInText, lookupTerm } from "../utils/search.js";
+import { getEffectiveLocale } from "../utils/locale.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 import type { MyContext } from "../context.js";
 
@@ -85,7 +86,7 @@ async function replyWithTerms(
     const card = await buildEnrichedTermCard(
       term,
       ctx.t.bind(ctx),
-      ctx.session.language || "en",
+      getEffectiveLocale(ctx),
     );
 
     await ctx.reply(card, {

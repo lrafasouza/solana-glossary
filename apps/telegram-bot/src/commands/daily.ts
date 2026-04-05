@@ -3,6 +3,7 @@ import { allTerms } from "../glossary/index.js";
 import { buildTermKeyboard } from "../utils/keyboard.js";
 import { db } from "../db/index.js";
 import type { MyContext } from "../context.js";
+import { getEffectiveLocale } from "../utils/locale.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 import { getBotDate } from "../utils/date.js";
 
@@ -37,7 +38,7 @@ export async function dailyTermCommand(ctx: MyContext): Promise<void> {
   const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
-    ctx.session.language || "en",
+    getEffectiveLocale(ctx),
   );
 
   await ctx.reply(header + card, {

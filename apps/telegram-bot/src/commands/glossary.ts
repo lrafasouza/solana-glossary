@@ -4,6 +4,7 @@ import { buildTermKeyboard, buildSelectKeyboard } from "../utils/keyboard.js";
 import { InlineKeyboard } from "grammy";
 import { db } from "../db/index.js";
 import type { MyContext } from "../context.js";
+import { getEffectiveLocale } from "../utils/locale.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 export async function glossaryCommand(ctx: MyContext): Promise<void> {
@@ -51,7 +52,7 @@ export async function glossaryCommand(ctx: MyContext): Promise<void> {
     const card = await buildEnrichedTermCard(
       result.term,
       ctx.t.bind(ctx),
-      ctx.session.language || "en",
+      getEffectiveLocale(ctx),
     );
     await ctx.reply(card, {
       parse_mode: "HTML",

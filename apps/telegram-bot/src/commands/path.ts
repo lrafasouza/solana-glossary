@@ -10,6 +10,7 @@ import {
   type PathProgress,
 } from "../data/paths.js";
 import type { MyContext } from "../context.js";
+import { getEffectiveLocale } from "../utils/locale.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 export async function pathCommand(ctx: MyContext): Promise<void> {
@@ -95,7 +96,7 @@ export async function sendPathStep(
   const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
-    ctx.session.language || "en",
+    getEffectiveLocale(ctx),
   );
   const isLast = boundedStep === path.termIds.length - 1;
   const isFav = userId ? db.isFavorite(userId, termId) : false;

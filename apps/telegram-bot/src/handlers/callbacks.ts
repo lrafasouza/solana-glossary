@@ -31,6 +31,7 @@ import { sendPathMenu, sendPathStep } from "../commands/path.js";
 import { db, GROUP_STREAK_THRESHOLD } from "../db/index.js";
 import type { MyContext, SessionData } from "../context.js";
 import { getLearningPath } from "../data/paths.js";
+import { getEffectiveLocale } from "../utils/locale.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 import { sendGroupWelcome } from "./group.js";
 
@@ -135,7 +136,7 @@ export async function handleSelectCallback(ctx: MyContext): Promise<void> {
   const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
-    ctx.session.language || "en",
+    getEffectiveLocale(ctx),
   );
   await ctx.answerCallbackQuery();
   await ctx.reply(card, {
@@ -663,7 +664,7 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
       const card = await buildEnrichedTermCard(
         correctTerm,
         ctx.t.bind(ctx),
-        ctx.session.language || "en",
+        getEffectiveLocale(ctx),
       );
       await ctx.reply(card, {
         parse_mode: "HTML",
@@ -786,7 +787,7 @@ export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
     const card = await buildEnrichedTermCard(
       correctTerm,
       ctx.t.bind(ctx),
-      ctx.session.language || "en",
+      getEffectiveLocale(ctx),
     );
     await ctx.reply(card, {
       parse_mode: "HTML",

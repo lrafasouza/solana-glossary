@@ -4,6 +4,7 @@ import { lookupTerm } from "../utils/search.js";
 import { buildMainMenuKeyboard, buildTermKeyboard } from "../utils/keyboard.js";
 import { IMAGES } from "../config.js";
 import type { MyContext } from "../context.js";
+import { getEffectiveLocale } from "../utils/locale.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 
 function buildLanguageKeyboard(ctx: MyContext): InlineKeyboard {
@@ -23,7 +24,7 @@ export async function startCommand(ctx: MyContext): Promise<void> {
       const card = await buildEnrichedTermCard(
         result.term,
         ctx.t.bind(ctx),
-        ctx.session.language || "en",
+        getEffectiveLocale(ctx),
       );
       await ctx.reply(card, {
         parse_mode: "HTML",
