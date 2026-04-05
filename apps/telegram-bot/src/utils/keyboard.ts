@@ -87,33 +87,54 @@ export function buildCategoriesKeyboard(
 
 export function buildMainMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
   return new InlineKeyboard()
+    .text(t("menu-explain"), "menu:explain")
     .text(t("menu-glossary"), "menu:glossary")
-    .text(t("menu-categories"), "menu:categories")
     .row()
-    .text(t("menu-random"), "menu:random")
     .text(t("menu-quiz"), "menu:quiz")
-    .row()
     .text(t("menu-path"), "menu:path")
+    .row()
+    .text(t("menu-progress"), "menu:progress")
+    .text(t("menu-library"), "menu:library")
+    .row()
     .text(t("menu-help"), "menu:help");
 }
 
 export function buildTipsKeyboard(t: MyContext["t"]): InlineKeyboard {
   return new InlineKeyboard()
     .text(t("tips-btn-explain"), "tips:explain")
-    .text(t("tips-btn-compare"), "tips:compare")
-    .row()
-    .text(t("tips-btn-path"), "tips:path")
-    .text(t("tips-btn-quiz"), "tips:quiz")
-    .row()
     .text(t("tips-btn-glossary"), "tips:glossary")
-    .text(t("tips-btn-categories"), "tips:categories")
     .row()
+    .text(t("tips-btn-quiz"), "tips:quiz")
+    .text(t("tips-btn-path"), "tips:path")
+    .row()
+    .text(t("menu-progress"), "menu:progress")
+    .text(t("menu-library"), "menu:library")
+    .row()
+    .text(t("tips-btn-compare"), "tips:compare")
+    .text(t("tips-btn-help"), "tips:help")
+    .row()
+    .text(t("btn-back-menu"), "menu:main");
+}
+
+export function buildProgressMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
+  return new InlineKeyboard()
     .text(t("tips-btn-streak"), "tips:streak")
     .text(t("tips-btn-leaderboard"), "tips:leaderboard")
     .row()
-    .text(t("tips-btn-help"), "tips:help")
+    .text(t("btn-back-menu"), "menu:main");
+}
+
+export function buildLibraryMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
+  return new InlineKeyboard()
+    .text(t("menu-categories"), "menu:categories")
+    .text(t("menu-random"), "menu:random")
     .row()
-    .text(t("tips-menu-back"), "tips:menu");
+    .text(t("menu-favorites"), "menu:favorites")
+    .text(t("menu-history"), "menu:history")
+    .row()
+    .text(t("menu-daily"), "menu:daily")
+    .row()
+    .text(t("btn-back-menu"), "menu:main");
 }
 
 export function buildPathMenuKeyboard(

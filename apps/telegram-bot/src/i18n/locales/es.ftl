@@ -1,31 +1,27 @@
 start-welcome =
     👋 <b>Solana Glossary Bot</b>
 
-    No salgas nunca más de Telegram para entender un término de Solana.
+    Entiende términos de Solana, practica y sigue aprendiendo sin salir de Telegram.
 
-    💬 <code>/explicar</code> — responde cualquier mensaje para decodificar términos al instante
-    💻 <code>/path</code> — rutas guiadas, retoma donde te quedaste
-    🧠 <code>/quiz</code> — quiz diario para construir tu racha
-    🔀 <code>/comparar poh pos</code> — compara dos conceptos lado a lado
+    💬 <code>/explicar</code> — decodifica términos dentro de la conversación
+    🔍 <code>/glosario</code> — busca cualquier concepto directamente
+    🧠 <code>/quiz</code> — practica y construye tu racha
+    💻 <code>/path</code> — sigue rutas guiadas de aprendizaje
 
 help-message =
     📘 <b>Solana Glossary Bot</b>
 
-    💬 <b>Explica en contexto:</b>
-    <code>/explicar</code> — responde a un mensaje para explicar términos Solana al instante
+    <b>Entender</b>
+    <code>/explicar</code> · <code>/glosario &lt;término&gt;</code> · <code>/comparar termino1 termino2</code>
 
-    🔀 <b>Compara conceptos:</b>
-    <code>/comparar &lt;termino1&gt; &lt;termino2&gt;</code> — comparación lado a lado
+    <b>Aprender</b>
+    <code>/path</code> · <code>/quiz</code>
 
-    💻 <b>Aprende con rutas:</b>
-    <code>/path</code> — rutas guiadas de aprendizaje
-
-    🧠 <b>Practica:</b>
-    <code>/quiz</code> — quiz diario + racha
+    <b>Progreso</b>
     <code>/streak</code> · <code>/leaderboard</code>
 
-    🔍 <b>Busca términos:</b>
-    <code>/glosario &lt;término&gt;</code> · <code>/aleatorio</code> · <code>/categorias</code> · <code>/terminodelhoy</code> · <code>/favoritos</code> · <code>/historial</code>
+    <b>Biblioteca</b>
+    <code>/categorias</code> · <code>/favoritos</code> · <code>/historial</code> · <code>/aleatorio</code> · <code>/terminodelhoy</code>
 
     🌐 Idioma: <code>/idioma pt|en|es</code>
 
@@ -148,14 +144,10 @@ btn-did-you-mean = Sí, mostrar →
 term-read-more-label = Ver documentación de Solana
 
 onboarding-tips =
-    💡 <b>Consejos rápidos</b>
+    💡 <b>Empieza aquí</b>
 
-    Toca un elemento del menú de abajo para ver exactamente cómo usar cada función.
-
-    Hero actions:
-    💬 <code>/explicar</code>
-    💻 <code>/path</code>
-    🧠 <code>/quiz easy</code>, <code>/quiz medium</code> o <code>/quiz hard</code>
+    Usa el menú para elegir tu siguiente paso:
+    entender un término, practicar con quiz o seguir una ruta.
 
 btn-feedback-up = 👍
 btn-feedback-down = 👎
@@ -202,12 +194,27 @@ category-header = 📂 <b>{ $name }</b> — { $count } términos
 
 daily-term-header = Término del día
 
+menu-explain = 💬 Explicar
 menu-glossary = 🔍 Glosario
 menu-categories = 📂 Categorías
 menu-random = 🎲 Aleatorio
 menu-quiz = 🧠 Quiz
-menu-path = 💻 Ruta Dev
+menu-path = 💻 Rutas
+menu-progress = 🔥 Progreso
+menu-library = 🗂️ Biblioteca
+menu-favorites = ⭐ Favoritos
+menu-history = 🕐 Historial
+menu-daily = 📆 Término del Día
 menu-help = 📘 Ayuda
+
+progress-menu-title =
+    🔥 <b>Progreso</b>
+
+    Sigue tu constancia y mira cómo vas en el ranking.
+library-menu-title =
+    🗂️ <b>Biblioteca</b>
+
+    Explora el glosario, revisa términos guardados y descubre algo nuevo.
 
 path-menu-header =
     💻 <b>Rutas de aprendizaje</b>
@@ -263,10 +270,10 @@ explain-summary = 💬 Encontré { $count } término(s) en este mensaje: { $term
 group-welcome =
     👋 <b>Solana Glossary Bot ya está aquí.</b>
 
-    Responde cualquier mensaje con <code>/explicar</code> para decodificar términos Solana sin sacar la conversación de Telegram.
+    Usa el bot en este grupo para explicar términos en contexto, comparar conceptos y practicar rápido.
 
-    Pruébalo ahora: responde a un mensaje y envía <code>/explicar</code>
-    También: <code>/comparar poh pos</code> · <code>/path</code> · <code>/quiz</code>
+    Empieza con <code>/explicar</code> sobre un mensaje respondido.
+    Luego usa <code>/quiz</code> y <code>/leaderboard</code> desde el menú.
 
 language-changed = ✅ Idioma cambiado a español.
 language-invalid = ❌ Idioma inválido. Usa: <code>/idioma pt | en | es</code>
@@ -283,13 +290,13 @@ quiz-correct-group-new-record-with-streak =
     🔥 Racha personal: <b>{ $personal }</b> días · 👥 Racha del grupo: <b>{ $group }</b> días{ $status }
 
 tips-menu-title =
-    💡 <b>Guía rápida del bot</b>
+    💡 <b>Cómo usar el bot</b>
 
-    Elige un elemento para ver cómo usarlo.
+    Elige un tema o abre uno de los menús agrupados.
 tips-menu-back = ← Volver a tips
 tips-btn-explain = 💬 Explicar
 tips-btn-compare = 🔀 Comparar
-tips-btn-path = 💻 Path
+tips-btn-path = 💻 Rutas
 tips-btn-quiz = 🧠 Quiz
 tips-btn-glossary = 🔍 Glosario
 tips-btn-categories = 📂 Categorías
@@ -350,7 +357,7 @@ tips-leaderboard =
 tips-help =
     📘 <b>Cómo usar /help</b>
 
-    Envía <code>/help</code> para ver todos los comandos principales organizados por caso de uso.
+    Envía <code>/help</code> para ver el bot organizado por intención: entender, aprender, progreso y biblioteca.
 quiz-wrong = ❌ <b>Incorrecto.</b> La respuesta era <b>{ $term }</b>.
 
 quiz-menu-title = 🧠 <b>Configurar Quiz</b>
@@ -406,6 +413,6 @@ group-language-changed = ✅ Idioma del grupo actualizado.
 group-onboarding-tips =
     💡 <b>Empieza rápido en grupos</b>
 
-    Usa <code>/explicar</code> respondiendo a un mensaje.
-    Usa <code>/comparar termino1 termino2</code> para comparar conceptos.
-    Usa <code>/quiz</code> para practicar rápido en el grupo.
+    Usa <code>/explicar</code> en una respuesta para decodificar términos en la conversación.
+    Usa <code>/quiz</code> para práctica rápida.
+    Usa <code>/leaderboard</code> y <code>/streak</code> para seguir el ritmo del grupo.

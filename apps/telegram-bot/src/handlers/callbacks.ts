@@ -7,7 +7,12 @@ import {
 import type { Category } from "../glossary/index.js";
 import { InlineKeyboard } from "grammy";
 import { formatTermList, formatCategoryName } from "../utils/format.js";
-import { buildTermKeyboard, buildTipsKeyboard } from "../utils/keyboard.js";
+import {
+  buildLibraryMenuKeyboard,
+  buildProgressMenuKeyboard,
+  buildTermKeyboard,
+  buildTipsKeyboard,
+} from "../utils/keyboard.js";
 import { sendMainMenu, sendWelcome } from "../commands/start.js";
 import {
   sendCategoriesMenu,
@@ -214,13 +219,52 @@ export async function handleMenuCallback(ctx: MyContext): Promise<void> {
       ctx.match = "";
       await glossaryCommand(ctx);
       return;
+    case "explain":
+      await ctx.editMessageText(
+        ctx.t("tips-explain", { bot_username: ctx.me.username }),
+        {
+          parse_mode: "HTML",
+          reply_markup: buildTipsKeyboard(ctx.t.bind(ctx)),
+        },
+      );
+      return;
     case "random":
       ctx.session.awaitingGlossaryQuery = false;
       await randomTermCommand(ctx);
       return;
+    case "daily":
+      ctx.session.awaitingGlossaryQuery = false;
+      await import("../commands/daily.js").then(({ dailyTermCommand }) =>
+        dailyTermCommand(ctx),
+      );
+      return;
+    case "favorites":
+      ctx.session.awaitingGlossaryQuery = false;
+      await import("../commands/favorites.js").then(({ favoritesCommand }) =>
+        favoritesCommand(ctx),
+      );
+      return;
+    case "history":
+      ctx.session.awaitingGlossaryQuery = false;
+      await import("../commands/history.js").then(({ historyCommand }) =>
+        historyCommand(ctx),
+      );
+      return;
     case "quiz":
       ctx.session.awaitingGlossaryQuery = false;
       await sendQuizMenu(ctx, true);
+      return;
+    case "progress":
+      await ctx.editMessageText(ctx.t("progress-menu-title"), {
+        parse_mode: "HTML",
+        reply_markup: buildProgressMenuKeyboard(ctx.t.bind(ctx)),
+      });
+      return;
+    case "library":
+      await ctx.editMessageText(ctx.t("library-menu-title"), {
+        parse_mode: "HTML",
+        reply_markup: buildLibraryMenuKeyboard(ctx.t.bind(ctx)),
+      });
       return;
     case "help":
       ctx.session.awaitingGlossaryQuery = false;
@@ -972,6 +1016,8 @@ export async function handleFeedbackCallback(ctx: MyContext): Promise<void> {
 
 function getTipsTopicKey(action: string): string | null {
   switch (action) {
+    case "menu":
+      return null;
     case "explain":
       return "tips-explain";
     case "compare":
