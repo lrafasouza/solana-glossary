@@ -13,6 +13,7 @@ import { helpCommand } from "./commands/help.js";
 import { languageCommand } from "./commands/language.js";
 import { glossaryCommand } from "./commands/glossary.js";
 import { explainCommand } from "./commands/explain.js";
+import { compareCommand } from "./commands/compare.js";
 import { categoriesCommand, categoryCommand } from "./commands/categories.js";
 import { pathCommand } from "./commands/path.js";
 import { dailyTermCommand } from "./commands/daily.js";
@@ -33,6 +34,7 @@ import {
   handleCatPageCallback,
   handleNoopCallback,
   handleMenuCallback,
+  handleTipsCallback,
   handlePathSelectCallback,
   handlePathStepCallback,
   handlePathQuizCallback,
@@ -101,6 +103,7 @@ bot.command("help", helpCommand);
 bot.command(["idioma", "language"], languageCommand);
 bot.command(["glossario", "glossary", "glosario"], glossaryCommand);
 bot.command(["explain", "explicar"], explainCommand);
+bot.command(["compare", "comparar"], compareCommand);
 bot.command(["path", "trilha"], pathCommand);
 bot.command(["categorias", "categories"], categoriesCommand);
 bot.command(["categoria", "category"], categoryCommand);
@@ -123,6 +126,7 @@ bot.callbackQuery(/^browse_cat:/, handleBrowseCatCallback);
 bot.callbackQuery(/^cat_page:/, handleCatPageCallback);
 bot.callbackQuery(/^noop:/, handleNoopCallback);
 bot.callbackQuery(/^menu:/, handleMenuCallback);
+bot.callbackQuery(/^tips:/, handleTipsCallback);
 bot.callbackQuery(/^path_select:/, handlePathSelectCallback);
 bot.callbackQuery(/^path_step:/, handlePathStepCallback);
 bot.callbackQuery(/^path_quiz:/, handlePathQuizCallback);

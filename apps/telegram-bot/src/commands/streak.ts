@@ -1,5 +1,4 @@
-// src/commands/streak.ts
-import { db } from "../db/index.js";
+import { db, GROUP_STREAK_THRESHOLD } from "../db/index.js";
 import type { MyContext } from "../context.js";
 
 export async function streakCommand(ctx: MyContext): Promise<void> {
@@ -10,29 +9,7 @@ export async function streakCommand(ctx: MyContext): Promise<void> {
   }
 
   const streak = db.getOrCreateStreak(userId);
-
-  // Build calendar view (last 7 days)
-  const calendarDays: string[] = [];
-  const today = new Date();
-  const lastQuizDate = streak.last_daily_date
-    ? new Date(streak.last_daily_date)
-    : null;
-
-  for (let i = 6; i >= 0; i--) {
-    const checkDate = new Date(today);
-    checkDate.setDate(today.getDate() - i);
-    const dateStr = checkDate.toISOString().split("T")[0];
-
-    if (lastQuizDate && dateStr === streak.last_daily_date) {
-      calendarDays.push("✅");
-    } else if (i === 0) {
-      calendarDays.push("⏳");
-    } else {
-      calendarDays.push("❌");
-    }
-  }
-
-  // Fire emoji intensity based on streak
+  const calendarDays = buildPersonalCalendar(streak.last_daily_date);
   const fireIntensity =
     streak.current_streak >= 30
       ? "🔥🔥🔥"
@@ -42,13 +19,78 @@ export async function streakCommand(ctx: MyContext): Promise<void> {
           ? "🔥"
           : "✨";
 
-  const message = ctx.t("streak-message", {
-    fire: fireIntensity,
-    current: streak.current_streak,
-    max: streak.max_streak,
-    freezes: 1 - streak.streak_freezes_used,
-    calendar: calendarDays.join(" "),
-  });
+  const sections = [
+    ctx.t("streak-message", {
+      fire: fireIntensity,
+      current: streak.current_streak,
+      max: streak.max_streak,
+      freezes: 1 - streak.streak_freezes_used,
+      calendar: calendarDays.join(" "),
+    }),
+  ];
 
-  await ctx.reply(message, { parse_mode: "HTML" });
+  const isGroup = ctx.chat?.type === "group" || ctx.chat?.type === "supergroup";
+  const chatId = ctx.chat?.id;
+
+  if (isGroup && chatId) {
+    sections.push(buildGroupStreakSection(ctx, chatId, userId));
+  }
+
+  await ctx.reply(sections.join("\n\n"), { parse_mode: "HTML" });
+}
+
+function buildPersonalCalendar(lastDailyDate: string | null): string[] {
+  const calendarDays: string[] = [];
+  const today = new Date();
+
+  for (let index = 6; index >= 0; index--) {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() - index);
+    const dateStr = checkDate.toISOString().split("T")[0];
+
+    if (lastDailyDate && dateStr === lastDailyDate) {
+      calendarDays.push("✅");
+    } else if (index === 0) {
+      calendarDays.push("⏳");
+    } else {
+      calendarDays.push("❌");
+    }
+  }
+
+  return calendarDays;
+}
+
+function buildGroupStreakSection(
+  ctx: MyContext,
+  chatId: number,
+  userId: number,
+): string {
+  if (!db.hasGroupMembership(chatId, userId)) {
+    return ctx.t("group-streak-no-participation");
+  }
+
+  const groupStreak = db.getOrCreateGroupStreak(chatId);
+  const today = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date());
+  const participantsToday = db.getGroupDailyParticipants(chatId, today);
+  const calendar = db
+    .getGroupStreakCalendar(chatId)
+    .map((active) => (active ? "✅" : "❌"))
+    .join(" ");
+
+  return [
+    ctx.t("group-streak-section-title"),
+    ctx.t("group-streak-current", { current: groupStreak.current_streak }),
+    ctx.t("group-streak-record", { max: groupStreak.max_streak }),
+    ctx.t("group-streak-today-progress", {
+      count: participantsToday,
+      threshold: GROUP_STREAK_THRESHOLD,
+    }),
+    "",
+    ctx.t("group-streak-calendar-label"),
+    calendar,
+    "",
+    ctx.t("group-rank-cta"),
+  ].join("\n");
 }

@@ -87,8 +87,25 @@ export function getTermLocalized(
   };
 }
 
+export function getLocalizedTermNames(id: string): string[] {
+  const names: string[] = [];
+  const pt = ptMap.get(id);
+  if (pt?.term) names.push(pt.term);
+  const es = esMap.get(id);
+  if (es?.term && es.term !== pt?.term) names.push(es.term);
+  return names;
+}
+
 export function getTermsByCategory(category: Category): GlossaryTerm[] {
   return allTerms.filter((term) => term.category === category);
+}
+
+export function getTermsByDepth(min: number, max: number): GlossaryTerm[] {
+  const matches = allTerms.filter(
+    (term) =>
+      term.depth !== undefined && term.depth >= min && term.depth <= max,
+  );
+  return matches.length > 0 ? matches : allTerms;
 }
 
 export function searchTerms(query: string): GlossaryTerm[] {

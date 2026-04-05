@@ -43,12 +43,21 @@ export async function sendPathMenu(
     ),
   };
 
+  const menuText = [
+    ctx.t("path-menu-header"),
+    "",
+    ...LEARNING_PATHS.map(
+      (path) =>
+        `${path.emoji} <b>${ctx.t(path.nameKey)}</b>\n${ctx.t(path.descKey)}`,
+    ),
+  ].join("\n\n");
+
   if (editMessage && ctx.callbackQuery) {
-    await ctx.editMessageText(ctx.t("path-menu-header"), options);
+    await ctx.editMessageText(menuText, options);
     return;
   }
 
-  await ctx.reply(ctx.t("path-menu-header"), options);
+  await ctx.reply(menuText, options);
 }
 
 export async function sendPathStep(
@@ -90,13 +99,23 @@ export async function sendPathStep(
   );
   const isLast = boundedStep === path.termIds.length - 1;
   const isFav = userId ? db.isFavorite(userId, termId) : false;
+  const nextPath = getNextLearningPath(pathId);
 
   if (userId && isLast) {
     db.markPathCompleted(userId, pathId);
   }
 
   const text = isLast
-    ? `${header}\n\n${card}\n\n${ctx.t("path-completed")}`
+    ? `${header}\n\n${card}\n\n${
+        nextPath
+          ? ctx.t("path-completed", {
+              name: ctx.t(path.nameKey),
+              next_path: ctx.t(nextPath.nameKey),
+            })
+          : ctx.t("path-completed-final", {
+              name: ctx.t(path.nameKey),
+            })
+      }`
     : `${header}\n\n${card}`;
 
   const options = {
@@ -118,4 +137,10 @@ export async function sendPathStep(
   }
 
   await ctx.reply(text, options);
+}
+
+function getNextLearningPath(pathId: string) {
+  const index = LEARNING_PATHS.findIndex((path) => path.id === pathId);
+  if (index === -1 || index === LEARNING_PATHS.length - 1) return undefined;
+  return LEARNING_PATHS[index + 1];
 }

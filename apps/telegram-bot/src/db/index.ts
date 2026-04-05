@@ -21,6 +21,8 @@ export interface StoredPathProgress {
   completed: boolean;
 }
 
+export const GROUP_STREAK_THRESHOLD = 2;
+
 class DatabaseWrapper {
   private db: Database.Database;
 
@@ -94,11 +96,46 @@ class DatabaseWrapper {
         updated_at INTEGER DEFAULT (unixepoch()),
         PRIMARY KEY (user_id, path_id)
       );
+
+      CREATE TABLE IF NOT EXISTS group_members (
+        chat_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        last_seen INTEGER DEFAULT (unixepoch()),
+        PRIMARY KEY (chat_id, user_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS group_streaks (
+        chat_id INTEGER PRIMARY KEY,
+        current_streak INTEGER DEFAULT 0,
+        max_streak INTEGER DEFAULT 0,
+        last_active_date TEXT,
+        last_broken_announcement_date TEXT,
+        updated_at INTEGER DEFAULT (unixepoch())
+      );
+
+      CREATE TABLE IF NOT EXISTS group_daily_participants (
+        chat_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        PRIMARY KEY (chat_id, user_id, date)
+      );
     `);
 
     // Migration: Add new columns to existing tables
     this.migrateStreaksTable();
     this.migrateUsersTable();
+  }
+
+  private getBotDate(date: Date = new Date()): string {
+    return new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "America/Sao_Paulo",
+    }).format(date);
+  }
+
+  private shiftDate(date: string, offsetDays: number): string {
+    const base = new Date(`${date}T12:00:00Z`);
+    base.setUTCDate(base.getUTCDate() + offsetDays);
+    return base.toISOString().slice(0, 10);
   }
 
   private migrateStreaksTable(): void {
@@ -556,6 +593,238 @@ class DatabaseWrapper {
     return rows
       .slice(start, end)
       .map((r) => ({ ...r, isCurrentUser: r.user_id === userId }));
+  }
+
+  recordGroupMember(chatId: number, userId: number): void {
+    this.db
+      .prepare(
+        `INSERT INTO group_members (chat_id, user_id, last_seen)
+         VALUES (?, ?, unixepoch())
+         ON CONFLICT(chat_id, user_id) DO UPDATE SET last_seen = unixepoch()`,
+      )
+      .run(chatId, userId);
+  }
+
+  hasGroupMembership(chatId: number, userId: number): boolean {
+    const row = this.db
+      .prepare(
+        "SELECT 1 FROM group_members WHERE chat_id = ? AND user_id = ? LIMIT 1",
+      )
+      .get(chatId, userId);
+    return Boolean(row);
+  }
+
+  getGroupTop10(
+    chatId: number,
+  ): { user_id: number; max_streak: number; first_name: string }[] {
+    const rows = this.db
+      .prepare(
+        `
+        SELECT s.user_id, s.max_streak, u.first_name
+        FROM streaks s
+        JOIN group_members gm ON s.user_id = gm.user_id
+        LEFT JOIN users u ON s.user_id = u.user_id
+        WHERE gm.chat_id = ? AND s.max_streak > 0
+        ORDER BY s.max_streak DESC, s.updated_at ASC
+        LIMIT 10
+      `,
+      )
+      .all(chatId) as {
+      user_id: number;
+      max_streak: number;
+      first_name: string | null;
+    }[];
+
+    return rows.map((row, index) => ({
+      ...row,
+      first_name: row.first_name || `User ${index + 1}`,
+    }));
+  }
+
+  getGroupRank(
+    chatId: number,
+    userId: number,
+  ): { rank: number; total: number; max_streak: number } | null {
+    const rows = this.db
+      .prepare(
+        `
+        SELECT s.user_id, s.max_streak
+        FROM streaks s
+        JOIN group_members gm ON s.user_id = gm.user_id
+        WHERE gm.chat_id = ? AND s.max_streak > 0
+        ORDER BY s.max_streak DESC, s.updated_at ASC
+      `,
+      )
+      .all(chatId) as { user_id: number; max_streak: number }[];
+
+    const index = rows.findIndex((row) => row.user_id === userId);
+    if (index === -1) return null;
+
+    return {
+      rank: index + 1,
+      total: rows.length,
+      max_streak: rows[index]?.max_streak ?? 0,
+    };
+  }
+
+  getOrCreateGroupStreak(chatId: number): {
+    current_streak: number;
+    max_streak: number;
+    last_active_date: string | null;
+    last_broken_announcement_date: string | null;
+  } {
+    const row = this.db
+      .prepare(
+        `SELECT current_streak, max_streak, last_active_date, last_broken_announcement_date
+         FROM group_streaks
+         WHERE chat_id = ?`,
+      )
+      .get(chatId) as
+      | {
+          current_streak: number;
+          max_streak: number;
+          last_active_date: string | null;
+          last_broken_announcement_date: string | null;
+        }
+      | undefined;
+
+    if (row) return row;
+
+    this.db
+      .prepare("INSERT INTO group_streaks (chat_id) VALUES (?)")
+      .run(chatId);
+
+    return {
+      current_streak: 0,
+      max_streak: 0,
+      last_active_date: null,
+      last_broken_announcement_date: null,
+    };
+  }
+
+  maybeResetGroupStreak(chatId: number): {
+    wasBroken: boolean;
+    current: number;
+    max: number;
+    lastActiveDate: string | null;
+  } {
+    const today = this.getBotDate();
+    const yesterday = this.shiftDate(today, -1);
+    const streak = this.getOrCreateGroupStreak(chatId);
+
+    if (
+      !streak.last_active_date ||
+      streak.last_active_date === today ||
+      streak.last_active_date === yesterday
+    ) {
+      return {
+        wasBroken: false,
+        current: streak.current_streak,
+        max: streak.max_streak,
+        lastActiveDate: streak.last_active_date,
+      };
+    }
+
+    const shouldAnnounce = streak.last_broken_announcement_date !== today;
+
+    this.db
+      .prepare(
+        `UPDATE group_streaks
+         SET current_streak = 0,
+             last_broken_announcement_date = ?,
+             updated_at = unixepoch()
+         WHERE chat_id = ?`,
+      )
+      .run(today, chatId);
+
+    return {
+      wasBroken: shouldAnnounce,
+      current: 0,
+      max: streak.max_streak,
+      lastActiveDate: streak.last_active_date,
+    };
+  }
+
+  recordGroupParticipant(
+    chatId: number,
+    userId: number,
+  ): { participantsToday: number; alreadyParticipated: boolean; date: string } {
+    const today = this.getBotDate();
+    const result = this.db
+      .prepare(
+        `INSERT OR IGNORE INTO group_daily_participants (chat_id, user_id, date)
+         VALUES (?, ?, ?)`,
+      )
+      .run(chatId, userId, today);
+
+    return {
+      participantsToday: this.getGroupDailyParticipants(chatId, today),
+      alreadyParticipated: result.changes === 0,
+      date: today,
+    };
+  }
+
+  getGroupDailyParticipants(chatId: number, date: string): number {
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM group_daily_participants
+         WHERE chat_id = ? AND date = ?`,
+      )
+      .get(chatId, date) as { count: number };
+    return row.count;
+  }
+
+  incrementGroupStreak(chatId: number): {
+    newStreak: number;
+    newMax: number;
+    isNewRecord: boolean;
+    justCrossedThreshold: boolean;
+  } {
+    const today = this.getBotDate();
+    const streak = this.getOrCreateGroupStreak(chatId);
+
+    if (streak.last_active_date === today) {
+      return {
+        newStreak: streak.current_streak,
+        newMax: streak.max_streak,
+        isNewRecord: false,
+        justCrossedThreshold: false,
+      };
+    }
+
+    const newStreak = streak.current_streak + 1;
+    const newMax = Math.max(newStreak, streak.max_streak);
+
+    this.db
+      .prepare(
+        `UPDATE group_streaks
+         SET current_streak = ?,
+             max_streak = ?,
+             last_active_date = ?,
+             updated_at = unixepoch()
+         WHERE chat_id = ?`,
+      )
+      .run(newStreak, newMax, today, chatId);
+
+    return {
+      newStreak,
+      newMax,
+      isNewRecord: newMax > streak.max_streak,
+      justCrossedThreshold: true,
+    };
+  }
+
+  getGroupStreakCalendar(chatId: number): boolean[] {
+    const today = this.getBotDate();
+    const days = Array.from({ length: 7 }, (_, index) =>
+      this.shiftDate(today, index - 6),
+    );
+
+    return days.map(
+      (date) =>
+        this.getGroupDailyParticipants(chatId, date) >= GROUP_STREAK_THRESHOLD,
+    );
   }
 
   // Notifications

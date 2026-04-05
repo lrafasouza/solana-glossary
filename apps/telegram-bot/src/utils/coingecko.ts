@@ -21,7 +21,7 @@ export async function getSolPrice(): Promise<SolPrice | null> {
   if (isFresh(priceCache)) return priceCache.value;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5_000);
+  const timer = setTimeout(() => controller.abort(), 1_500);
 
   try {
     const response = await fetch(

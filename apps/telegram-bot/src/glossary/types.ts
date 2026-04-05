@@ -21,4 +21,5 @@ export interface GlossaryTerm {
   category: Category;
   related?: string[];
   aliases?: string[];
+  depth?: 1 | 2 | 3 | 4 | 5;
 }

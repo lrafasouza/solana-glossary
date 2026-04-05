@@ -19,7 +19,7 @@ async function rpcRequest<T>(
   params: unknown[] = [],
 ): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5_000);
+  const timer = setTimeout(() => controller.abort(), 1_500);
   let response: Response;
   try {
     response = await fetch(RPC_URL, {

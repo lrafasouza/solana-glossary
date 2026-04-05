@@ -1,12 +1,9 @@
-// src/utils/keyboard.ts
 import { InlineKeyboard } from "grammy";
-import type { GlossaryTerm } from "../glossary/index.js";
-import type { Category } from "../glossary/index.js";
+import type { GlossaryTerm, Category } from "../glossary/index.js";
 import type { MyContext } from "../context.js";
 import { db } from "../db/index.js";
 import type { LearningPath, PathProgress } from "../data/paths.js";
 
-/** Term card navigation: [Related] [Category] [Share] [Favorite] [Feedback] */
 export function buildTermKeyboard(
   termId: string,
   t: MyContext["t"],
@@ -14,23 +11,19 @@ export function buildTermKeyboard(
 ): InlineKeyboard {
   const keyboard = new InlineKeyboard();
 
-  // First row: Related, Category
   keyboard.text(t("btn-related"), `related:${termId}`);
   keyboard.text(t("btn-category"), `category:${termId}`);
   keyboard.row();
 
-  // Second row: Share
   keyboard.switchInline(t("btn-share"), termId);
   keyboard.row();
 
-  // Third row: Favorite, Feedback
   if (userId) {
     const isFav = db.isFavorite(userId, termId);
-    if (isFav) {
-      keyboard.text(t("btn-fav-remove"), `fav_remove:${termId}`);
-    } else {
-      keyboard.text(t("btn-fav-add"), `fav_add:${termId}`);
-    }
+    keyboard.text(
+      isFav ? t("btn-fav-remove") : t("btn-fav-add"),
+      isFav ? `fav_remove:${termId}` : `fav_add:${termId}`,
+    );
     keyboard.row();
     keyboard.text(t("btn-feedback-up"), `feedback:${termId}:up`);
     keyboard.text(t("btn-feedback-down"), `feedback:${termId}:down`);
@@ -39,17 +32,17 @@ export function buildTermKeyboard(
   return keyboard;
 }
 
-/** Multiple results selection keyboard */
 export function buildSelectKeyboard(terms: GlossaryTerm[]): InlineKeyboard {
   const keyboard = new InlineKeyboard();
-  terms.forEach((term, i) => {
+
+  terms.forEach((term, index) => {
     keyboard.text(term.term, `select:${term.id}`);
-    if (i < terms.length - 1) keyboard.row();
+    if (index < terms.length - 1) keyboard.row();
   });
+
   return keyboard;
 }
 
-/** Category pagination keyboard */
 export function buildCategoryPageKeyboard(
   category: Category,
   page: number,
@@ -58,7 +51,6 @@ export function buildCategoryPageKeyboard(
 ): InlineKeyboard {
   const keyboard = new InlineKeyboard();
 
-  // Navigation row
   if (page > 1) {
     keyboard.text(t("btn-prev"), `cat_page:${category}:${page - 1}`);
   }
@@ -82,9 +74,9 @@ export function buildCategoriesKeyboard(
 ): InlineKeyboard {
   const keyboard = new InlineKeyboard();
 
-  categories.forEach((cat, i) => {
-    keyboard.text(formatCategoryLabel(cat), `browse_cat:${cat}`);
-    if (i % 2 === 1) keyboard.row();
+  categories.forEach((category, index) => {
+    keyboard.text(formatCategoryLabel(category), `browse_cat:${category}`);
+    if (index % 2 === 1) keyboard.row();
   });
 
   keyboard.row();
@@ -103,6 +95,25 @@ export function buildMainMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
     .row()
     .text(t("menu-path"), "menu:path")
     .text(t("menu-help"), "menu:help");
+}
+
+export function buildTipsKeyboard(t: MyContext["t"]): InlineKeyboard {
+  return new InlineKeyboard()
+    .text(t("tips-btn-explain"), "tips:explain")
+    .text(t("tips-btn-compare"), "tips:compare")
+    .row()
+    .text(t("tips-btn-path"), "tips:path")
+    .text(t("tips-btn-quiz"), "tips:quiz")
+    .row()
+    .text(t("tips-btn-glossary"), "tips:glossary")
+    .text(t("tips-btn-categories"), "tips:categories")
+    .row()
+    .text(t("tips-btn-streak"), "tips:streak")
+    .text(t("tips-btn-leaderboard"), "tips:leaderboard")
+    .row()
+    .text(t("tips-btn-help"), "tips:help")
+    .row()
+    .text(t("tips-menu-back"), "tips:menu");
 }
 
 export function buildPathMenuKeyboard(
@@ -166,6 +177,7 @@ export function buildPathStepKeyboard(
   if (isLast) {
     keyboard.row();
     keyboard.text(t("path-quiz"), `path_quiz:${pathId}`);
+    keyboard.row();
     keyboard.text(t("path-restart"), `path_reset:${pathId}`);
   }
 

@@ -1,37 +1,33 @@
 start-welcome =
-    👋 Welcome to the <b>Solana Glossary Bot</b>!
-    Search any of the 1,001 Solana terms.
+    👋 <b>Solana Glossary Bot</b>
 
-    Quick command: <code>/glossary proof-of-history</code>
-    Inline search: <code>@{ $bot_username } poh</code>
+    Never leave Telegram to look up a Solana term again.
+
+    💬 <code>/explain</code> — reply to any message to decode terms on the spot
+    💻 <code>/path</code> — guided learning paths, pick up where you left off
+    🧠 <code>/quiz</code> — daily quiz to build your streak
+    🔄 <code>/compare poh pos</code> — compare any two concepts side by side
 
 help-message =
     📘 <b>Solana Glossary Bot</b>
 
-    🔍 <b>Search:</b>
-    <code>/glossary &lt;term&gt;</code> — look up a Solana term
-    <code>/explain</code> — reply to a message to explain Solana terms in chat
-    <code>/random</code> — random term
+    💬 <b>Explain in context:</b>
+    <code>/explain</code> — reply to a message to explain Solana terms on the spot
 
-    📂 <b>Browse:</b>
-    <code>/categories</code> — browse 14 categories
-    <code>/category &lt;name&gt;</code> — terms in a category
+    🔄 <b>Compare concepts:</b>
+    <code>/compare &lt;term1&gt; &lt;term2&gt;</code> — side-by-side comparison
 
-    🧠 <b>Learn:</b>
-    <code>/termofday</code> — term of the day
-    <code>/quiz</code> — start quiz
-    <code>/favorites</code> — saved terms
-    <code>/history</code> — recently viewed terms
-    <code>/streak</code> — view your streak
-    <code>/leaderboard</code> — global ranking
+    💻 <b>Learn with paths:</b>
+    <code>/path</code> — guided learning paths
 
-    💻 <b>Dev:</b>
-    <code>/path</code> — developer learning paths
+    🧠 <b>Practice:</b>
+    <code>/quiz</code> — daily quiz + streak
+    <code>/streak</code> · <code>/leaderboard</code>
 
-    🌐 <b>Language:</b>
-    <code>/language pt|en|es</code> — change language
+    🔍 <b>Look up terms:</b>
+    <code>/glossary &lt;term&gt;</code> · <code>/random</code> · <code>/categories</code> · <code>/termofday</code> · <code>/favorites</code> · <code>/history</code>
 
-    💡 Type <code>@{ $bot_username } &lt;term&gt;</code> in any chat.
+    🌐 Language: <code>/language pt|en|es</code>
 
 term-aliases = 🔗 Aliases
 term-related = 📂 Related
@@ -40,7 +36,7 @@ btn-related = 🔍 Related terms
 btn-category = 📂 Browse category
 btn-share = 📤 Share
 
-btn-prev = ← Previous
+btn-prev = ← Back
 btn-next = Next →
 btn-page = Page { $current }/{ $total }
 btn-back-categories = 🔙 Categories
@@ -49,9 +45,15 @@ btn-back-menu = 🏠 Menu
 random-term-header = 🎲 Random term
 
 quiz-question =
-    🧠 <b>Which term is described below?</b>
+    🧠 <b>Which term is described below?</b>  { $difficulty }
 
     <i>{ $definition }</i>
+quiz-difficulty-beginner = 🟢 Beginner
+quiz-difficulty-basic = 🟢 Basic
+quiz-difficulty-intermediate = 🟡 Intermediate
+quiz-difficulty-advanced = 🔴 Advanced
+quiz-difficulty-expert = 🔴 Expert
+quiz-difficulty-fallback = ⚠️ Not enough terms at that level — showing random.
 quiz-option-a = A) { $term }
 quiz-option-b = B) { $term }
 quiz-option-c = C) { $term }
@@ -67,6 +69,13 @@ quiz-correct-new-record =
     🎉 <b>New record!</b> { $max } days!
 
     🔥 Streak: <b>{ $max }</b> days
+quiz-correct-group =
+    ✅ { $name } got it right! It was <b>{ $term }</b>.
+    🔥 Streak: <b>{ $current }</b> days
+quiz-correct-group-new-record =
+    ✅ { $name } got it right! It was <b>{ $term }</b>.
+    🎉 <b>New record!</b> { $max } days!
+    🔥 Streak: <b>{ $current }</b> days
 quiz-wrong = ❌ <b>Wrong.</b> The answer was <b>{ $term }</b>.
 quiz-wrong-retry =
     ❌ <b>Not quite right!</b>
@@ -102,7 +111,21 @@ streak-message =
 
     📅 Last 7 days:
     { $calendar }
+group-streak-section-title = 👥 <b>Group Streak</b>
+group-streak-current = 🔥 Current: <b>{ $current }</b> days
+group-streak-record = 🏆 Group record: <b>{ $max }</b> days
+group-streak-calendar-label = 📅 Last 7 days:
 streak-no-user = ❌ User required to view streak.
+group-streak-started = 🔥 Group streak started! Take <code>/quiz</code> every day to keep it alive.
+group-streak-maintained = ✅ Group streak maintained! { $count } members participated today.
+group-streak-milestone = { $emoji} <b>{ $days } days of group streak!</b> { $celebration }
+group-streak-milestone-3 = The group is heating up.
+group-streak-milestone-7 = One full week. You are consistent.
+group-streak-milestone-14 = This group is unstoppable.
+group-streak-milestone-30 = Legendary.
+group-streak-broken = 💔 The group streak was lost. Take <code>/quiz</code> today to restart it.
+group-streak-no-participation = 👥 Take <code>/quiz</code> in this group to see the shared streak.
+group-streak-today-progress = 👤 Today: { $count }/{ $threshold } members participated
 
 notification-streak-warning = 🔥 Streak Alert! You have 2 hours to take the <code>/quiz</code> and keep your streak.
 
@@ -111,6 +134,10 @@ quiz-streak-continued = 🔥 Streak: <b>{ $current }</b> days
 
 leaderboard-title = 🏆 <b>Global Ranking — Top 10</b>
 leaderboard-empty = 🏆 No participants yet. Be the first to complete quizzes!
+group-leaderboard-title = 🏆 <b>Top in this group</b>
+group-leaderboard-empty = 🏆 No group member has taken a quiz yet. Be the first!
+group-rank-position = 📊 <b>Your rank:</b> #{ $rank } of { $total } members
+group-rank-cta = Take <code>/quiz</code> to climb the ranking!
 rank-no-user = ❌ User required to view rank.
 rank-no-streak = You don't have a streak yet. Take a <code>/quiz</code> to start!
 rank-position = 📊 <b>Your rank:</b> #{ $rank } of { $total } participants
@@ -129,13 +156,14 @@ btn-did-you-mean = Yes, show →
 term-read-more-label = Read Solana docs
 
 onboarding-tips =
-    💡 <b>Quick tips:</b>
+    💡 <b>Quick tips</b>
 
-    🔍 Look up any term: <code>/glossary proof-of-history</code>
-    💬 In groups, reply with <code>/explain</code>
-    📂 Browse by category: <code>/categories</code>
-    🧠 Test your knowledge: <code>/quiz</code>
-    💻 Follow a dev path: <code>/path</code>
+    Tap an item in the menu below to see exactly how each feature works.
+
+    Hero actions:
+    💬 <code>/explain</code>
+    💻 <code>/path</code>
+    🧠 <code>/quiz easy</code>, <code>/quiz medium</code> or <code>/quiz hard</code>
 
 btn-feedback-up = 👍
 btn-feedback-down = 👎
@@ -146,11 +174,23 @@ multiple-results = 🔍 Found <b>{ $count }</b> results for <b>{ $query }</b>. C
 usage-glossary =
     💡 Usage: <code>/glossary &lt;term&gt;</code>
     Example: <code>/glossary proof-of-history</code>
+usage-compare =
+    🔄 Usage: <code>/compare &lt;term1&gt; &lt;term2&gt;</code>
+    Example: <code>/compare poh pos</code>
+usage-quiz =
+    🧠 Usage: <code>/quiz</code> · <code>/quiz easy</code> · <code>/quiz medium</code> · <code>/quiz hard</code>
 prompt-glossary-query =
     🔍 <b>What do you want to search for?</b>
 
     Send the term now.
     Example: <code>proof-of-history</code>
+
+compare-header = 🔄 <b>{ $term1 }</b> vs <b>{ $term2 }</b>
+compare-shared-related = 🔗 Related to both: { $terms }
+compare-not-found-one = ❌ Term not found: <b>{ $query }</b>. Did you mean <code>{ $suggestion }</code>?
+compare-not-found-one-no-suggestion = ❌ Term not found: <b>{ $query }</b>. Use <code>/glossary</code> to search.
+compare-not-found-both = ❌ Neither term was recognized. Use <code>/categories</code> to explore.
+compare-same-term = 💡 You compared a term with itself. Try <code>/glossary { $term }</code> for the full card.
 
 categories-choose =
     📚 <b>Solana Glossary — 14 Categories</b>
@@ -174,21 +214,37 @@ menu-path = 💻 Dev Path
 menu-help = 📘 Help
 
 path-menu-header =
-    💻 <b>Learning paths</b>
+    💻 <b>Learning Paths</b>
 
-    Choose a guided path and resume where you left off.
-    Each path shows your current progress.
-path-step-header = { $emoji } <b>{ $name }</b> · Step { $step }/{ $total }
+    Each path is a focused mini-course.
+    Your progress is saved — resume where you left off.
+path-step-header = { $emoji} <b>{ $name }</b> · Step { $step } of { $total }
 path-step-badge = { $current }/{ $total }
-path-completed = ✅ <b>Path completed!</b> You can review it, restart it, or take a quiz for this path.
+path-completed =
+    ✅ <b>Path completed: { $name }</b>
+
+    You've covered the key concepts in this path.
+
+    Recommended next step:
+    🧠 Quiz this path to keep your streak going
+
+    or
+    ➡️ Start { $next_path }
+path-completed-final =
+    ✅ <b>Path completed: { $name }</b>
+
+    You've covered the key concepts in this path.
+
+    Recommended next step:
+    🧠 Quiz this path to keep your streak going
 path-quiz = 🧠 Quiz this path
 path-restart = 🔄 Restart
 path-name-solana-basics = Solana Basics
-path-desc-solana-basics = Core Solana protocol concepts
+path-desc-solana-basics = Protocol fundamentals: PoH, slots, epochs, validators
 path-name-defi-foundations = DeFi Foundations
-path-desc-defi-foundations = Essential DeFi primitives
+path-desc-defi-foundations = How DeFi works on Solana: AMMs, liquidity pools, swaps
 path-name-builders-path = Builder's Path
-path-desc-builders-path = Core concepts for Solana builders
+path-desc-builders-path = What every Solana dev must know: programs, PDAs, CPIs
 
 explain-no-reply =
     💬 <b>How to use /explain:</b>
@@ -200,20 +256,93 @@ explain-no-reply =
     The bot will explain the Solana terms found in that message.
 explain-not-found = ❌ No recognizable Solana terms found in that message.
 group-welcome =
-    👋 <b>Hello! I’m the Solana Glossary Bot.</b>
+    👋 <b>Solana Glossary Bot is here.</b>
 
-    I’m here to explain Solana terms without pulling the conversation out of Telegram.
+    Reply to any message with <code>/explain</code> to decode Solana terms without pulling the conversation out of Telegram.
 
-    🔍 <code>/glossary &lt;term&gt;</code> — search a term
-    💬 <code>/explain</code> — reply to a message to explain terms
-    💻 <code>/path</code> — guided learning paths
-    🧠 <code>/quiz</code> — Solana quiz
-    📅 <code>/termofday</code> — term of the day
-
-    I also work inline with <code>@{ $bot_username } &lt;term&gt;</code>.
+    Try it now: reply to a message and send <code>/explain</code>
+    Also: <code>/compare poh pos</code> · <code>/path</code> · <code>/quiz</code>
 
 language-changed = ✅ Language changed to English.
 language-invalid = ❌ Invalid language. Use: <code>/language pt | en | es</code>
 
 internal-error = ⚠️ Something went wrong. Please try again.
 rate-limit = ⏳ Please slow down. Wait a moment before sending more requests.
+
+quiz-correct-group-with-streak =
+    ✅ { $name } got it right! It was <b>{ $term }</b>.
+    🔥 Personal streak: <b>{ $personal }</b> days · 👥 Group streak: <b>{ $group }</b> days{ $status }
+quiz-correct-group-new-record-with-streak =
+    ✅ { $name } got it right! It was <b>{ $term }</b>.
+    🎉 <b>New personal record!</b> { $max } days.
+    🔥 Personal streak: <b>{ $personal }</b> days · 👥 Group streak: <b>{ $group }</b> days{ $status }
+
+tips-menu-title =
+    💡 <b>Quick bot guide</b>
+
+    Choose an item to see how to use it.
+tips-menu-back = ← Back to tips
+tips-btn-explain = 💬 Explain
+tips-btn-compare = 🔄 Compare
+tips-btn-path = 💻 Path
+tips-btn-quiz = 🧠 Quiz
+tips-btn-glossary = 🔍 Glossary
+tips-btn-categories = 📂 Categories
+tips-btn-streak = 🔥 Streak
+tips-btn-leaderboard = 🏆 Leaderboard
+tips-btn-help = 📘 Help
+tips-explain =
+    💬 <b>How to use /explain</b>
+
+    1. Reply to a message in a group
+    2. Send <code>/explain</code>
+    3. The bot detects Solana terms and explains them instantly
+
+    Example: reply to a message about "turbine" and send <code>/explain</code>.
+tips-compare =
+    🔄 <b>How to use /compare</b>
+
+    Compare two concepts side by side:
+    <code>/compare poh pos</code>
+    <code>/compare account pda</code>
+tips-path =
+    💻 <b>How to use /path</b>
+
+    Send <code>/path</code> to open guided learning paths.
+    Pick a path, move term by term, then finish with the path quiz.
+tips-quiz =
+    🧠 <b>How to use /quiz</b>
+
+    Available levels:
+    <code>/quiz</code>
+    <code>/quiz easy</code>
+    <code>/quiz medium</code>
+    <code>/quiz hard</code>
+    <code>/quiz 1</code> through <code>/quiz 5</code>
+tips-glossary =
+    🔍 <b>How to use /glossary</b>
+
+    Search for a term directly:
+    <code>/glossary proof-of-history</code>
+
+    Inline also works:
+    <code>@{ $bot_username } poh</code>
+tips-categories =
+    📂 <b>How to use categories</b>
+
+    Send <code>/categories</code> to browse the menu
+    or <code>/category defi</code> to open one category directly.
+tips-streak =
+    🔥 <b>How to use /streak</b>
+
+    In DMs, it shows your personal streak.
+    In groups, it shows your streak plus the group's shared streak.
+tips-leaderboard =
+    🏆 <b>How to use /leaderboard</b>
+
+    In DMs, it shows the global ranking.
+    In groups, it shows the local ranking for that group.
+tips-help =
+    📘 <b>How to use /help</b>
+
+    Send <code>/help</code> to see all main commands organized by use case.

@@ -10,9 +10,12 @@ export async function buildEnrichedTermCard(
   locale?: string,
 ): Promise<string> {
   const baseCard = formatTermCard(term, t, locale);
-  const [liveStats, solPrice] = await Promise.all([
-    getLiveStatsLine(term.id),
-    getSolPriceLine(term.id),
+  const enrichmentBudget = new Promise<[null, null]>((resolve) =>
+    setTimeout(() => resolve([null, null]), 2_000),
+  );
+  const [liveStats, solPrice] = await Promise.race([
+    Promise.all([getLiveStatsLine(term.id), getSolPriceLine(term.id)]),
+    enrichmentBudget,
   ]);
 
   return [baseCard, liveStats, solPrice].filter(Boolean).join("\n\n");

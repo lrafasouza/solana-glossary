@@ -7,7 +7,7 @@ import {
 import type { Category } from "../glossary/index.js";
 import { InlineKeyboard } from "grammy";
 import { formatTermList, formatCategoryName } from "../utils/format.js";
-import { buildTermKeyboard } from "../utils/keyboard.js";
+import { buildTermKeyboard, buildTipsKeyboard } from "../utils/keyboard.js";
 import { sendMainMenu, sendWelcome } from "../commands/start.js";
 import {
   sendCategoriesMenu,
@@ -15,7 +15,11 @@ import {
 } from "../commands/categories.js";
 import { glossaryCommand } from "../commands/glossary.js";
 import { randomTermCommand } from "../commands/random.js";
-import { quizCommand, sendQuiz } from "../commands/quiz.js";
+import {
+  buildQuizQuestionText,
+  quizCommand,
+  sendQuiz,
+} from "../commands/quiz.js";
 import { helpCommand } from "../commands/help.js";
 import { sendPathMenu, sendPathStep } from "../commands/path.js";
 import { db } from "../db/index.js";
@@ -206,6 +210,29 @@ export async function handleMenuCallback(ctx: MyContext): Promise<void> {
     default:
       await ctx.reply(ctx.t("internal-error"));
   }
+}
+
+export async function handleTipsCallback(ctx: MyContext): Promise<void> {
+  const action = (ctx.callbackQuery?.data ?? "").slice("tips:".length);
+  const topicKey = getTipsTopicKey(action);
+
+  await ctx.answerCallbackQuery();
+
+  if (!topicKey) {
+    await ctx.editMessageText(ctx.t("tips-menu-title"), {
+      parse_mode: "HTML",
+      reply_markup: buildTipsKeyboard(ctx.t.bind(ctx)),
+    });
+    return;
+  }
+
+  await ctx.editMessageText(
+    ctx.t(topicKey, { bot_username: ctx.me.username }),
+    {
+      parse_mode: "HTML",
+      reply_markup: buildTipsKeyboard(ctx.t.bind(ctx)),
+    },
+  );
 }
 
 export async function handlePathSelectCallback(ctx: MyContext): Promise<void> {
@@ -401,13 +428,89 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
   const isCorrect = answerIdx === session.correctIdx;
 
   const correctTerm = getTerm(session.options[session.correctIdx]);
+  const isGroup = ctx.chat?.type === "group" || ctx.chat?.type === "supergroup";
+  const chatId = ctx.chat?.id;
+
+  if (isGroup && chatId) {
+    db.recordGroupMember(chatId, userId);
+  }
 
   if (isCorrect) {
-    // Increment streak on correct answer
     const streak = db.incrementStreak(userId);
+    const displayName = ctx.from?.username
+      ? `@${ctx.from.username}`
+      : (ctx.from?.first_name ?? "Someone");
+    let groupStreakValue = 0;
+    let groupStreakJustAdvanced = false;
 
-    // Send appropriate message based on streak state
-    if (streak.isNewRecord) {
+    if (isGroup && chatId) {
+      const brokenState = db.maybeResetGroupStreak(chatId);
+      if (brokenState.wasBroken) {
+        await ctx.reply(ctx.t("group-streak-broken"), {
+          parse_mode: "HTML",
+        });
+      }
+
+      const participation = db.recordGroupParticipant(chatId, userId);
+      const groupStreak = db.getOrCreateGroupStreak(chatId);
+
+      if (
+        participation.participantsToday >= 2 &&
+        groupStreak.last_active_date !== participation.date
+      ) {
+        const incremented = db.incrementGroupStreak(chatId);
+        groupStreakValue = incremented.newStreak;
+        groupStreakJustAdvanced = incremented.justCrossedThreshold;
+
+        if (incremented.newStreak === 1) {
+          await ctx.reply(ctx.t("group-streak-started"), {
+            parse_mode: "HTML",
+          });
+        } else {
+          await ctx.reply(
+            buildGroupMilestoneMessage(
+              ctx,
+              incremented.newStreak,
+              participation.participantsToday,
+            ),
+            {
+              parse_mode: "HTML",
+            },
+          );
+        }
+      } else {
+        groupStreakValue = groupStreak.current_streak;
+      }
+    }
+
+    if (isGroup && chatId && streak.isNewRecord) {
+      await ctx.reply(
+        ctx.t("quiz-correct-group-new-record-with-streak", {
+          name: displayName,
+          term: correctTerm?.term ?? "",
+          personal: streak.current,
+          group: groupStreakValue,
+          status: groupStreakJustAdvanced ? " ✅" : "",
+          max: streak.max,
+        }),
+        {
+          parse_mode: "HTML",
+        },
+      );
+    } else if (isGroup && chatId) {
+      await ctx.reply(
+        ctx.t("quiz-correct-group-with-streak", {
+          name: displayName,
+          term: correctTerm?.term ?? "",
+          personal: streak.current,
+          group: groupStreakValue,
+          status: groupStreakJustAdvanced ? " ✅" : "",
+        }),
+        {
+          parse_mode: "HTML",
+        },
+      );
+    } else if (streak.isNewRecord) {
       await ctx.reply(
         ctx.t("quiz-correct-new-record", {
           term: correctTerm?.term ?? "",
@@ -460,7 +563,14 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
     // Clear session
     db.clearQuizSession(userId);
   } else {
-    // Wrong answer - offer options to retry or see result
+    if (isGroup) {
+      await ctx.answerCallbackQuery({
+        text: stripHtml(ctx.t("quiz-wrong-retry")),
+        show_alert: true,
+      });
+      return;
+    }
+
     const keyboard = new InlineKeyboard()
       .text(ctx.t("quiz-btn-retry"), "quiz_retry")
       .text(ctx.t("quiz-btn-result"), "quiz_result");
@@ -504,9 +614,6 @@ export async function handleQuizRetryCallback(ctx: MyContext): Promise<void> {
     .filter((t): t is NonNullable<typeof t> => t !== undefined);
 
   // Show question again
-  const definitionSnippet = targetTerm.definition;
-  const question = ctx.t("quiz-question", { definition: definitionSnippet });
-
   const keyboard = new InlineKeyboard()
     .text(
       ctx.t("quiz-option-a", { term: options[0]?.term ?? "" }),
@@ -529,7 +636,7 @@ export async function handleQuizRetryCallback(ctx: MyContext): Promise<void> {
     );
 
   await ctx.reply(ctx.t("quiz-try-again"), { parse_mode: "HTML" });
-  await ctx.reply(question, {
+  await ctx.reply(buildQuizQuestionText(ctx, targetTerm), {
     parse_mode: "HTML",
     reply_markup: keyboard,
   });
@@ -579,4 +686,71 @@ export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
 
 export async function handleFeedbackCallback(ctx: MyContext): Promise<void> {
   await ctx.answerCallbackQuery({ text: ctx.t("feedback-thanks") });
+}
+
+function getTipsTopicKey(action: string): string | null {
+  switch (action) {
+    case "explain":
+      return "tips-explain";
+    case "compare":
+      return "tips-compare";
+    case "path":
+      return "tips-path";
+    case "quiz":
+      return "tips-quiz";
+    case "glossary":
+      return "tips-glossary";
+    case "categories":
+      return "tips-categories";
+    case "streak":
+      return "tips-streak";
+    case "leaderboard":
+      return "tips-leaderboard";
+    case "help":
+      return "tips-help";
+    default:
+      return null;
+  }
+}
+
+function buildGroupMilestoneMessage(
+  ctx: MyContext,
+  days: number,
+  participantsToday: number,
+): string {
+  if (days === 3) {
+    return ctx.t("group-streak-milestone", {
+      emoji: "🔥",
+      days,
+      celebration: ctx.t("group-streak-milestone-3"),
+    });
+  }
+
+  if (days === 7) {
+    return ctx.t("group-streak-milestone", {
+      emoji: "🎉",
+      days,
+      celebration: ctx.t("group-streak-milestone-7"),
+    });
+  }
+
+  if (days === 14) {
+    return ctx.t("group-streak-milestone", {
+      emoji: "🔥",
+      days,
+      celebration: ctx.t("group-streak-milestone-14"),
+    });
+  }
+
+  if (days === 30) {
+    return ctx.t("group-streak-milestone", {
+      emoji: "🏆",
+      days,
+      celebration: ctx.t("group-streak-milestone-30"),
+    });
+  }
+
+  return ctx.t("group-streak-maintained", {
+    count: participantsToday,
+  });
 }

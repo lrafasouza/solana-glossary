@@ -1,4 +1,4 @@
-import { allTerms } from "../glossary/index.js";
+import { allTerms, getLocalizedTermNames } from "../glossary/index.js";
 import type { GlossaryTerm } from "../glossary/index.js";
 
 export type LookupResult =
@@ -29,6 +29,8 @@ type TextMatch = {
   kind: "name" | "alias";
   span: number;
 };
+
+const MAX_TERM_TOKENS = 6;
 
 type SearchScore = {
   score: number;
@@ -253,6 +255,10 @@ for (const term of allTerms) {
     const na = normalize(alias);
     if (!phraseIndex.has(na)) phraseIndex.set(na, { term, kind: "alias" });
   }
+  for (const localizedName of getLocalizedTermNames(term.id)) {
+    const ln = normalize(localizedName);
+    if (ln && !phraseIndex.has(ln)) phraseIndex.set(ln, { term, kind: "name" });
+  }
 }
 
 export function findTermsInText(text: string): GlossaryTerm[] {
@@ -262,7 +268,7 @@ export function findTermsInText(text: string): GlossaryTerm[] {
   const matches = new Map<string, TextMatch>();
 
   for (let i = 0; i < tokens.length; i++) {
-    for (let span = 3; span >= 1; span--) {
+    for (let span = MAX_TERM_TOKENS; span >= 1; span--) {
       const slice = tokens.slice(i, i + span);
       if (slice.length !== span) continue;
 
