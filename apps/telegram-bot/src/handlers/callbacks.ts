@@ -387,7 +387,11 @@ export async function handleQuizModeCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
+  const currentDraft = ctx.session.quizDraft;
   await ctx.answerCallbackQuery();
+  if (currentDraft?.mode === mode) {
+    return;
+  }
   updateQuizDraft(ctx, { mode });
   await sendQuizMenu(ctx, true);
 }
@@ -404,7 +408,11 @@ export async function handleQuizDifficultyCallback(
     return;
   }
 
+  const currentDraft = ctx.session.quizDraft;
   await ctx.answerCallbackQuery();
+  if (currentDraft?.difficultyKey === difficultyKey) {
+    return;
+  }
   updateQuizDraft(ctx, {
     difficultyKey: difficultyKey as NonNullable<SessionData["quizDraft"]>["difficultyKey"],
   });
@@ -420,7 +428,11 @@ export async function handleQuizCountCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
+  const currentDraft = ctx.session.quizDraft;
   await ctx.answerCallbackQuery();
+  if (currentDraft?.questionCount === questionCount) {
+    return;
+  }
   updateQuizDraft(ctx, {
     questionCount: questionCount as 3 | 5 | 10,
   });
@@ -438,7 +450,11 @@ export async function handleQuizFailureModeCallback(
     return;
   }
 
+  const currentDraft = ctx.session.quizDraft;
   await ctx.answerCallbackQuery();
+  if (currentDraft?.failureMode === failureMode) {
+    return;
+  }
   updateQuizDraft(ctx, {
     failureMode: failureMode as "continue" | "sudden_death",
   });

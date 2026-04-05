@@ -115,11 +115,27 @@ export async function sendQuizMenu(
   };
 
   if (editMessage && ctx.callbackQuery) {
-    await ctx.editMessageText(text, options);
+    try {
+      await ctx.editMessageText(text, options);
+    } catch (error) {
+      if (isMessageNotModifiedError(error)) {
+        return;
+      }
+      throw error;
+    }
     return;
   }
 
   await ctx.reply(text, options);
+}
+
+function isMessageNotModifiedError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("message is not modified") ||
+    message.includes("message_not_modified")
+  );
 }
 
 export async function startQuizFromDraft(ctx: MyContext): Promise<void> {

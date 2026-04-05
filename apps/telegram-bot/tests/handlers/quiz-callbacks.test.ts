@@ -42,6 +42,9 @@ vi.mock("../../src/utils/term-card.js", () => ({
 
 import {
   handleQuizAnswerCallback,
+  handleQuizCountCallback,
+  handleQuizFailureModeCallback,
+  handleQuizDifficultyCallback,
   handleQuizModeCallback,
   handleQuizRoundAnswerCallback,
 } from "../../src/handlers/callbacks.js";
@@ -60,6 +63,23 @@ describe("quiz callbacks", () => {
     expect(text).toContain("[quiz-menu-title]");
   });
 
+  it("does not re-render when round is clicked again", async () => {
+    const ctx = createMockCtx({
+      match: "quiz_mode:round",
+      chatType: "private",
+      sessionLanguage: "pt",
+    });
+    ctx.session.quizDraft = {
+      mode: "round",
+      difficultyKey: "all",
+      questionCount: 5,
+      failureMode: "continue",
+    };
+    await handleQuizModeCallback(ctx);
+    expect(ctx.answerCallbackQuery).toHaveBeenCalledOnce();
+    expect(ctx.editMessageText).not.toHaveBeenCalled();
+  });
+
   it("keeps the private quiz menu locale when toggling to round", async () => {
     dbMock.getLanguage.mockReturnValueOnce("pt");
     const ctx = createMockCtx({
@@ -72,6 +92,54 @@ describe("quiz callbacks", () => {
     expect(ctx.editMessageText).toHaveBeenCalledOnce();
     const [text] = (ctx.editMessageText as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(text).toContain("[quiz-menu-title]");
+  });
+
+  it("does not re-render when the same difficulty is selected again", async () => {
+    const ctx = createMockCtx({
+      match: "quiz_diff:medium",
+      chatType: "private",
+      sessionLanguage: "pt",
+    });
+    ctx.session.quizDraft = {
+      mode: "round",
+      difficultyKey: "medium",
+      questionCount: 5,
+      failureMode: "continue",
+    };
+    await handleQuizDifficultyCallback(ctx);
+    expect(ctx.editMessageText).not.toHaveBeenCalled();
+  });
+
+  it("does not re-render when the same question count is selected again", async () => {
+    const ctx = createMockCtx({
+      match: "quiz_count:5",
+      chatType: "private",
+      sessionLanguage: "pt",
+    });
+    ctx.session.quizDraft = {
+      mode: "round",
+      difficultyKey: "all",
+      questionCount: 5,
+      failureMode: "continue",
+    };
+    await handleQuizCountCallback(ctx);
+    expect(ctx.editMessageText).not.toHaveBeenCalled();
+  });
+
+  it("does not re-render when the same failure mode is selected again", async () => {
+    const ctx = createMockCtx({
+      match: "quiz_fail:continue",
+      chatType: "private",
+      sessionLanguage: "pt",
+    });
+    ctx.session.quizDraft = {
+      mode: "round",
+      difficultyKey: "all",
+      questionCount: 5,
+      failureMode: "continue",
+    };
+    await handleQuizFailureModeCallback(ctx);
+    expect(ctx.editMessageText).not.toHaveBeenCalled();
   });
 
   it("advances the round after a correct answer", async () => {

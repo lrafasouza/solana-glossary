@@ -87,8 +87,8 @@ export function buildCategoriesKeyboard(
 
 export function buildMainMenuKeyboard(t: MyContext["t"]): InlineKeyboard {
   return new InlineKeyboard()
-    .text(t("menu-explain"), "menu:explain")
     .text(t("menu-glossary"), "menu:glossary")
+    .text(t("menu-explain"), "menu:explain")
     .row()
     .text(t("menu-quiz"), "menu:quiz")
     .text(t("menu-path"), "menu:path")

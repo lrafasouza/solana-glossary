@@ -21,6 +21,7 @@ vi.mock("../../src/utils/term-card.js", () => ({
 }));
 
 import { handleMenuCallback } from "../../src/handlers/callbacks.js";
+import { buildMainMenuKeyboard } from "../../src/utils/keyboard.js";
 
 describe("menu callbacks", () => {
   beforeEach(() => {
@@ -43,5 +44,10 @@ describe("menu callbacks", () => {
     const [text, opts] = (ctx.editMessageText as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(text).toBe("[library-menu-title]");
     expect(opts.reply_markup).toBeDefined();
+  });
+
+  it("keeps glossary as the first menu action", () => {
+    const keyboard = buildMainMenuKeyboard(((key: string) => key) as any);
+    expect((keyboard as any).inline_keyboard[0][0].text).toBe("menu-glossary");
   });
 });
