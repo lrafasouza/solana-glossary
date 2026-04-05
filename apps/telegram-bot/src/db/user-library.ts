@@ -197,6 +197,7 @@ export async function setPathStep(
   step: number,
 ): Promise<void> {
   if (shouldBypassSupabase()) return;
+  const current = await getPathProgress(userId, pathId);
   const { error } = await getSupabase()
     .from("user_path_progress")
     .upsert(
@@ -204,7 +205,7 @@ export async function setPathStep(
         user_id: userId,
         path_id: pathId,
         step,
-        completed: false,
+        completed: current?.completed ?? false,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id,path_id" },

@@ -12,19 +12,19 @@ export async function streakCommand(ctx: MyContext): Promise<void> {
   const streak = await db.getOrCreateStreak(userId);
   const calendarDays = (await db.getUserStreakCalendar(userId)).map(
     (active, index, all) => {
-      if (active) return "âœ…";
-      if (index === all.length - 1) return "â³";
-      return "âŒ";
+      if (active) return "✅";
+      if (index === all.length - 1) return "⏳";
+      return "❌";
     },
   );
   const fireIntensity =
     streak.current_streak >= 30
-      ? "ðŸ”¥ðŸ”¥ðŸ”¥"
+      ? "🔥🔥🔥"
       : streak.current_streak >= 14
-        ? "ðŸ”¥ðŸ”¥"
+        ? "🔥🔥"
         : streak.current_streak >= 7
-          ? "ðŸ”¥"
-          : "âœ¨";
+          ? "🔥"
+          : "✨";
 
   const sections = [
     ctx.t("streak-message", {
@@ -57,7 +57,7 @@ async function buildGroupStreakSection(
   const participantsToday = await db.getGroupDailyParticipants(chatId, today);
   const hasParticipation = await db.hasGroupMembership(chatId, userId);
   const calendar = (await db.getGroupStreakCalendar(chatId))
-    .map((active) => (active ? "âœ…" : "âŒ"))
+    .map((active) => (active ? "✅" : "❌"))
     .join(" ");
 
   return [

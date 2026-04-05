@@ -2,6 +2,26 @@ import { getSupabase } from "./client.js";
 import { asNumber, getBotDate, shiftDate } from "./helpers.js";
 import { GROUP_STREAK_THRESHOLD, type GroupStreakRow } from "./types.js";
 
+async function getFirstNamesByUserId(
+  userIds: number[],
+): Promise<Map<number, string>> {
+  if (userIds.length === 0) return new Map();
+
+  const { data, error } = await getSupabase()
+    .from("users")
+    .select("user_id, first_name")
+    .in("user_id", userIds);
+
+  if (error) throw error;
+
+  return new Map(
+    (data ?? []).map((row: { user_id: number; first_name: string | null }) => [
+      asNumber(row.user_id),
+      row.first_name ?? "",
+    ]),
+  );
+}
+
 async function ensureGroupStreak(chatId: number): Promise<GroupStreakRow> {
   const streak = await getOrCreateGroupStreak(chatId);
   return {
@@ -60,7 +80,7 @@ export async function getGroupTop10(
 
   const { data, error } = await getSupabase()
     .from("streaks")
-    .select("user_id, max_streak, updated_at, users(first_name)")
+    .select("user_id, max_streak, updated_at")
     .in("user_id", userIds)
     .gt("max_streak", 0)
     .order("max_streak", { ascending: false })
@@ -68,21 +88,18 @@ export async function getGroupTop10(
     .limit(10);
 
   if (error) throw error;
-
-  return (
-    data ?? []
-  ).map(
-    (
-      row: { user_id: number; max_streak: number; users: { first_name?: string | null } | null },
-      index: number,
-    ) => ({
-      user_id: asNumber(row.user_id),
-      max_streak: asNumber(row.max_streak),
-      first_name:
-        (row.users as { first_name?: string | null } | null)?.first_name ||
-        `User ${index + 1}`,
-    }),
+  const rows = (data ?? []).map((row: { user_id: number; max_streak: number }) => ({
+    user_id: asNumber(row.user_id),
+    max_streak: asNumber(row.max_streak),
+  }));
+  const firstNames = await getFirstNamesByUserId(
+    rows.map((row: { user_id: number }) => row.user_id),
   );
+
+  return rows.map((row: { user_id: number; max_streak: number }, index: number) => ({
+    ...row,
+    first_name: firstNames.get(row.user_id) || `User ${index + 1}`,
+  }));
 }
 
 export async function getGroupRank(
