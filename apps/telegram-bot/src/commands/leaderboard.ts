@@ -88,37 +88,64 @@ export async function rankCommand(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const rank = db.getUserRank(userId);
-  if (!rank) {
-    await ctx.reply(ctx.t("rank-no-streak"));
-    return;
-  }
-
-  const nearby = db.getNearbyRanks(userId, 2);
-  const lines: string[] = [];
-
-  lines.push(ctx.t("rank-position", { rank: rank.rank, total: rank.total }));
-  lines.push(ctx.t("rank-max-streak", { max: rank.max_streak }));
-  lines.push("");
-  lines.push(ctx.t("rank-nearby"));
-
-  nearby.forEach((user) => {
-    if (user.isCurrentUser) {
-      lines.push(
-        `${ctx.t("rank-you")} - ${ctx
-          .t("rank-entry-simple", { rank: "", streak: user.max_streak })
-          .replace(/^\s*[-—]\s*/, "")}`,
-      );
+  try {
+    const rank = db.getUserRank(userId);
+    if (!rank) {
+      await ctx.reply(ctx.t("rank-no-streak"));
       return;
     }
 
+    const nearby = db.getNearbyRanks(userId, 2);
+    const lines: string[] = [];
+
     lines.push(
-      ctx.t("rank-entry-simple", {
-        rank: `${user.rank}.`,
-        streak: user.max_streak,
+      ctx.t("rank-position", {
+        rank: toFiniteNumber(rank.rank, "rank.rank"),
+        total: toFiniteNumber(rank.total, "rank.total"),
       }),
     );
-  });
+    lines.push(
+      ctx.t("rank-max-streak", {
+        max: toFiniteNumber(rank.max_streak, "rank.max_streak"),
+      }),
+    );
+    lines.push("");
+    lines.push(ctx.t("rank-nearby"));
 
-  await ctx.reply(lines.join("\n"), { parse_mode: "HTML" });
+    nearby.forEach((user) => {
+      const streak = toFiniteNumber(user.max_streak, "nearby.max_streak");
+      if (user.isCurrentUser) {
+        lines.push(ctx.t("rank-entry-you", { streak }));
+        return;
+      }
+
+      lines.push(
+        ctx.t("rank-entry-simple", {
+          rank: `${toFiniteNumber(user.rank, "nearby.rank")}.`,
+          streak,
+        }),
+      );
+    });
+
+    await ctx.reply(lines.join("\n"), { parse_mode: "HTML" });
+  } catch (error) {
+    console.error("Failed to render rank command:", error);
+    await replyInternalError(ctx);
+  }
+}
+
+function toFiniteNumber(value: unknown, label: string): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  throw new TypeError(`Invalid numeric value for ${label}`);
+}
+
+async function replyInternalError(ctx: MyContext): Promise<void> {
+  try {
+    await ctx.reply(ctx.t("internal-error"));
+  } catch {
+    await ctx.reply("Internal error.");
+  }
 }

@@ -142,6 +142,7 @@ rank-max-streak = 🔥 Your best: { $max } days
 rank-you = → <b>You</b>
 leaderboard-entry = { $medal } { $name } — { $streak } days
 rank-entry-simple = { $rank } — { $streak } days
+rank-entry-you = → <b>You</b> — { $streak } days
 rank-nearby = 📈 Nearby competitors:
 
 did-you-mean =

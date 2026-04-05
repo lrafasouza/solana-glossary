@@ -172,6 +172,7 @@ bot.catch((err) => {
     ? Object.keys(update).find((k) => k !== "update_id")
     : "unknown";
   console.error("Bot error:", err.message, {
+    error: err.error,
     update_id: update?.update_id,
     type: updateType,
   });

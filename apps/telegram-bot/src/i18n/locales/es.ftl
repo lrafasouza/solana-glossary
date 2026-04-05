@@ -141,6 +141,7 @@ rank-max-streak = 🔥 Tu récord: { $max } días
 rank-you = → <b>Tú</b>
 leaderboard-entry = { $medal } { $name } — { $streak } días
 rank-entry-simple = { $rank } — { $streak } días
+rank-entry-you = → <b>Tú</b> — { $streak } días
 rank-nearby = 📈 Competidores cercanos:
 
 did-you-mean =
