@@ -11,6 +11,7 @@ vi.mock("../../src/db/index.js", () => ({
 }));
 
 vi.mock("../../src/glossary/index.js", () => ({
+  allTerms: [],
   getTerm: vi.fn(),
   getTermsByCategory: vi.fn(() => []),
   getCategories: vi.fn(() => []),

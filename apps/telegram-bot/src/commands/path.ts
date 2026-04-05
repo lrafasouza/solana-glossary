@@ -22,7 +22,7 @@ export async function sendPathMenu(
   editMessage = false,
 ): Promise<void> {
   const userId = ctx.from?.id;
-  const storedProgress = userId ? db.getAllPathProgress(userId) : {};
+  const storedProgress = userId ? await db.getAllPathProgress(userId) : {};
   const progressMap: Record<string, PathProgress> = Object.fromEntries(
     LEARNING_PATHS.map((path) => [
       path.id,
@@ -84,7 +84,7 @@ export async function sendPathStep(
 
   const userId = ctx.from?.id;
   if (userId) {
-    db.setPathStep(userId, pathId, boundedStep);
+    await db.setPathStep(userId, pathId, boundedStep);
   }
 
   const header = ctx.t("path-step-header", {
@@ -96,14 +96,14 @@ export async function sendPathStep(
   const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
-    getEffectiveLocale(ctx),
+    await getEffectiveLocale(ctx),
   );
   const isLast = boundedStep === path.termIds.length - 1;
-  const isFav = userId ? db.isFavorite(userId, termId) : false;
+  const isFav = userId ? await db.isFavorite(userId, termId) : false;
   const nextPath = getNextLearningPath(pathId);
 
   if (userId && isLast) {
-    db.markPathCompleted(userId, pathId);
+    await db.markPathCompleted(userId, pathId);
   }
 
   const text = isLast

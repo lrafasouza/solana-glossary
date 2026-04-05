@@ -63,11 +63,11 @@ export async function handleLangCallback(ctx: MyContext): Promise<void> {
   const chatId = ctx.chat?.id;
 
   if (isGroup && chatId) {
-    db.setGroupLanguage(chatId, lang!);
+    await db.setGroupLanguage(chatId, lang!);
   } else {
     ctx.session.language = lang;
     if (ctx.from?.id) {
-      db.setLanguage(ctx.from.id, lang!);
+      await db.setLanguage(ctx.from.id, lang!);
     }
   }
   await ctx.i18n.useLocale(lang!);
@@ -139,18 +139,18 @@ export async function handleSelectCallback(ctx: MyContext): Promise<void> {
 
   const userId = ctx.from?.id;
   if (userId) {
-    db.addHistory(userId, termId);
+    await db.addHistory(userId, termId);
   }
 
   const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
-    getEffectiveLocale(ctx),
+    await getEffectiveLocale(ctx),
   );
   await ctx.answerCallbackQuery();
   await ctx.reply(card, {
     parse_mode: "HTML",
-    reply_markup: buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
+    reply_markup: await buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
   });
 }
 
@@ -331,7 +331,7 @@ export async function handlePathSelectCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const progress = userId ? db.getPathProgress(userId, pathId) : undefined;
+  const progress = userId ? await db.getPathProgress(userId, pathId) : undefined;
   const step = progress?.completed
     ? path.termIds.length - 1
     : (progress?.step ?? 0);
@@ -489,7 +489,7 @@ export async function handlePathResetCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
-  db.resetPath(userId, pathId);
+  await db.resetPath(userId, pathId);
   await ctx.answerCallbackQuery();
   await sendPathStep(ctx, pathId, 0, true);
 }
@@ -507,7 +507,7 @@ export async function handlePathFavAddCallback(ctx: MyContext): Promise<void> {
   const [, pathId, stepText, termId] = match;
 
   try {
-    db.addFavorite(userId, termId);
+    await db.addFavorite(userId, termId);
     await ctx.answerCallbackQuery({ text: ctx.t("favorite-added") });
     await sendPathStep(ctx, pathId, parseInt(stepText, 10), true);
   } catch (err) {
@@ -532,7 +532,7 @@ export async function handlePathFavRemoveCallback(
 
   const [, pathId, stepText, termId] = match;
 
-  db.removeFavorite(userId, termId);
+  await db.removeFavorite(userId, termId);
   await ctx.answerCallbackQuery({ text: ctx.t("favorite-removed") });
   await sendPathStep(ctx, pathId, parseInt(stepText, 10), true);
 }
@@ -549,12 +549,12 @@ export async function handleFavAddCallback(ctx: MyContext): Promise<void> {
   const termId = (ctx.callbackQuery?.data ?? "").slice("fav_add:".length);
 
   try {
-    db.addFavorite(userId, termId);
+    await db.addFavorite(userId, termId);
     await ctx.answerCallbackQuery({ text: ctx.t("favorite-added") });
 
     // Update keyboard to show remove button
     await ctx.editMessageReplyMarkup({
-      reply_markup: buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
+      reply_markup: await buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
     });
   } catch (err) {
     await ctx.answerCallbackQuery({
@@ -573,12 +573,12 @@ export async function handleFavRemoveCallback(ctx: MyContext): Promise<void> {
 
   const termId = (ctx.callbackQuery?.data ?? "").slice("fav_remove:".length);
 
-  db.removeFavorite(userId, termId);
+  await db.removeFavorite(userId, termId);
   await ctx.answerCallbackQuery({ text: ctx.t("favorite-removed") });
 
   // Update keyboard to show add button
   await ctx.editMessageReplyMarkup({
-    reply_markup: buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
+    reply_markup: await buildTermKeyboard(termId, ctx.t.bind(ctx), userId),
   });
 }
 
@@ -591,7 +591,7 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const session = db.getQuizSession(userId);
+  const session = await db.getQuizSession(userId);
   if (!session) {
     await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
     return;
@@ -617,11 +617,11 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
   const chatId = ctx.chat?.id;
 
   if (isGroup && chatId) {
-    db.recordGroupMember(chatId, userId);
+    await db.recordGroupMember(chatId, userId);
   }
 
   if (isCorrect) {
-    const streak = db.incrementStreak(userId);
+    const streak = await db.incrementStreak(userId);
     const displayName = ctx.from?.username
       ? `@${ctx.from.username}`
       : (ctx.from?.first_name ?? "Someone");
@@ -629,21 +629,21 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
     let groupStreakJustAdvanced = false;
 
     if (isGroup && chatId) {
-      const brokenState = db.maybeResetGroupStreak(chatId);
+      const brokenState = await db.maybeResetGroupStreak(chatId);
       if (brokenState.wasBroken) {
         await ctx.reply(ctx.t("group-streak-broken"), {
           parse_mode: "HTML",
         });
       }
 
-      const participation = db.recordGroupParticipant(chatId, userId);
-      const groupStreak = db.getOrCreateGroupStreak(chatId);
+      const participation = await db.recordGroupParticipant(chatId, userId);
+      const groupStreak = await db.getOrCreateGroupStreak(chatId);
 
       if (
         participation.participantsToday >= GROUP_STREAK_THRESHOLD &&
         groupStreak.last_active_date !== participation.date
       ) {
-        const incremented = db.incrementGroupStreak(chatId);
+        const incremented = await db.incrementGroupStreak(chatId);
         groupStreakValue = incremented.newStreak;
         groupStreakJustAdvanced = incremented.justCrossedThreshold;
 
@@ -730,18 +730,18 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
     // Schedule streak warning for tomorrow (2h before midnight)
     const { scheduleStreakWarning } =
       await import("../scheduler/notifications.js");
-    scheduleStreakWarning(userId);
+    await scheduleStreakWarning(userId);
 
     // Show the term card
     if (correctTerm) {
       const card = await buildEnrichedTermCard(
         correctTerm,
         ctx.t.bind(ctx),
-        getEffectiveLocale(ctx),
+        await getEffectiveLocale(ctx),
       );
       await ctx.reply(card, {
         parse_mode: "HTML",
-        reply_markup: buildTermKeyboard(
+        reply_markup: await buildTermKeyboard(
           correctTerm.id,
           ctx.t.bind(ctx),
           userId,
@@ -749,10 +749,10 @@ export async function handleQuizAnswerCallback(ctx: MyContext): Promise<void> {
       });
     }
     // Clear session
-    db.clearQuizSession(userId);
+    await db.clearQuizSession(userId);
   } else {
     if (isGroup) {
-      db.clearQuizSession(userId);
+      await db.clearQuizSession(userId);
       await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(
         () => {},
       );
@@ -778,7 +778,7 @@ export async function handleQuizRetryCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const session = db.getQuizSession(userId);
+  const session = await db.getQuizSession(userId);
   if (!session) {
     await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
     return;
@@ -837,7 +837,7 @@ export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const session = db.getQuizSession(userId);
+  const session = await db.getQuizSession(userId);
   if (!session) {
     await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
     return;
@@ -860,16 +860,20 @@ export async function handleQuizResultCallback(ctx: MyContext): Promise<void> {
     const card = await buildEnrichedTermCard(
       correctTerm,
       ctx.t.bind(ctx),
-      getEffectiveLocale(ctx),
+      await getEffectiveLocale(ctx),
     );
     await ctx.reply(card, {
       parse_mode: "HTML",
-      reply_markup: buildTermKeyboard(correctTerm.id, ctx.t.bind(ctx), userId),
+      reply_markup: await buildTermKeyboard(
+        correctTerm.id,
+        ctx.t.bind(ctx),
+        userId,
+      ),
     });
   }
 
   // Clear session
-  db.clearQuizSession(userId);
+  await db.clearQuizSession(userId);
   await ctx.answerCallbackQuery();
 }
 
@@ -884,7 +888,7 @@ export async function handleQuizRoundAnswerCallback(
     return;
   }
 
-  const session = db.getQuizSession(userId);
+  const session = await db.getQuizSession(userId);
   if (!session || session.mode !== "round") {
     await ctx.answerCallbackQuery({ text: ctx.t("quiz-no-session") });
     return;
@@ -912,7 +916,7 @@ export async function handleQuizRoundAnswerCallback(
   const isCorrect = answerIdx === session.correctIdx;
 
   if (isCorrect) {
-    const streak = db.incrementStreak(userId);
+    const streak = await db.incrementStreak(userId);
     await ctx.reply(
       ctx.t(
         streak.isNewRecord || streak.current > 1
@@ -928,7 +932,7 @@ export async function handleQuizRoundAnswerCallback(
 
     const { scheduleStreakWarning } =
       await import("../scheduler/notifications.js");
-    scheduleStreakWarning(userId);
+    await scheduleStreakWarning(userId);
     session.correctAnswers += 1;
   } else {
     session.wrongAnswers += 1;
@@ -957,7 +961,7 @@ export async function handleQuizRoundAnswerCallback(
     (!isCorrect && session.failureMode === "sudden_death");
 
   if (roundEnded) {
-    db.clearQuizSession(userId);
+    await db.clearQuizSession(userId);
     const answered = session.correctAnswers + session.wrongAnswers;
     const accuracy =
       answered === 0
@@ -993,15 +997,15 @@ export async function handleQuizRoundAnswerCallback(
 
   const nextSession = buildNextRoundSession(session);
   if (!nextSession) {
-    db.clearQuizSession(userId);
+    await db.clearQuizSession(userId);
     await ctx.reply(ctx.t("internal-error"));
     return;
   }
 
-  db.saveQuizSession(userId, nextSession);
+  await db.saveQuizSession(userId, nextSession);
   const nextTerm = getTerm(nextSession.termId);
   if (!nextTerm) {
-    db.clearQuizSession(userId);
+    await db.clearQuizSession(userId);
     await ctx.reply(ctx.t("internal-error"));
     return;
   }

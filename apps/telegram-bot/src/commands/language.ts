@@ -19,7 +19,7 @@ export async function languageCommand(ctx: MyContext): Promise<void> {
 
   ctx.session.language = input as SessionData["language"];
   if (userId) {
-    db.setLanguage(userId, input);
+    await db.setLanguage(userId, input);
   }
   await ctx.i18n.useLocale(input);
   await ctx.reply(ctx.t("language-changed-confirmation"), {

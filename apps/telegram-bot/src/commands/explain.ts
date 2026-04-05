@@ -80,18 +80,18 @@ async function replyWithTerms(
 
   for (const term of terms) {
     if (userId) {
-      db.addHistory(userId, term.id);
+      await db.addHistory(userId, term.id);
     }
 
     const card = await buildEnrichedTermCard(
       term,
       ctx.t.bind(ctx),
-      getEffectiveLocale(ctx),
+      await getEffectiveLocale(ctx),
     );
 
     await ctx.reply(card, {
       parse_mode: "HTML",
-      reply_markup: buildTermKeyboard(term.id, ctx.t.bind(ctx), userId),
+      reply_markup: await buildTermKeyboard(term.id, ctx.t.bind(ctx), userId),
     });
   }
 }

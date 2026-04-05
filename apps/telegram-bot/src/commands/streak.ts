@@ -9,22 +9,22 @@ export async function streakCommand(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const streak = db.getOrCreateStreak(userId);
-  const calendarDays = db
-    .getUserStreakCalendar(userId)
-    .map((active, index, all) => {
-      if (active) return "✅";
-      if (index === all.length - 1) return "⏳";
-      return "❌";
-    });
+  const streak = await db.getOrCreateStreak(userId);
+  const calendarDays = (await db.getUserStreakCalendar(userId)).map(
+    (active, index, all) => {
+      if (active) return "âœ…";
+      if (index === all.length - 1) return "â³";
+      return "âŒ";
+    },
+  );
   const fireIntensity =
     streak.current_streak >= 30
-      ? "🔥🔥🔥"
+      ? "ðŸ”¥ðŸ”¥ðŸ”¥"
       : streak.current_streak >= 14
-        ? "🔥🔥"
+        ? "ðŸ”¥ðŸ”¥"
         : streak.current_streak >= 7
-          ? "🔥"
-          : "✨";
+          ? "ðŸ”¥"
+          : "âœ¨";
 
   const sections = [
     ctx.t("streak-message", {
@@ -40,25 +40,24 @@ export async function streakCommand(ctx: MyContext): Promise<void> {
   const chatId = ctx.chat?.id;
 
   if (isGroup && chatId) {
-    sections.push(buildGroupStreakSection(ctx, chatId, userId));
+    sections.push(await buildGroupStreakSection(ctx, chatId, userId));
   }
 
   await ctx.reply(sections.join("\n\n"), { parse_mode: "HTML" });
 }
 
-function buildGroupStreakSection(
+async function buildGroupStreakSection(
   ctx: MyContext,
   chatId: number,
   userId: number,
-): string {
-  db.maybeResetGroupStreak(chatId);
-  const groupStreak = db.getOrCreateGroupStreak(chatId);
+): Promise<string> {
+  await db.maybeResetGroupStreak(chatId);
+  const groupStreak = await db.getOrCreateGroupStreak(chatId);
   const today = getBotDate();
-  const participantsToday = db.getGroupDailyParticipants(chatId, today);
-  const hasParticipation = db.hasGroupMembership(chatId, userId);
-  const calendar = db
-    .getGroupStreakCalendar(chatId)
-    .map((active) => (active ? "✅" : "❌"))
+  const participantsToday = await db.getGroupDailyParticipants(chatId, today);
+  const hasParticipation = await db.hasGroupMembership(chatId, userId);
+  const calendar = (await db.getGroupStreakCalendar(chatId))
+    .map((active) => (active ? "âœ…" : "âŒ"))
     .join(" ");
 
   return [

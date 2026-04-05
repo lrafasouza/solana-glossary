@@ -11,5 +11,5 @@ export const i18n = new I18n<MyContext>({
   defaultLocale: "en",
   useSession: false, // we manage language in our own session field
   directory: resolve(__dirname, "locales"),
-  localeNegotiator: (ctx) => getEffectiveLocale(ctx),
+  localeNegotiator: async (ctx) => getEffectiveLocale(ctx),
 });

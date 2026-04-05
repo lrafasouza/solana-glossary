@@ -176,7 +176,7 @@ export async function sendQuiz(
     prepared.eligibleTerms[Math.floor(Math.random() * prepared.eligibleTerms.length)]!,
   );
 
-  db.saveQuizSession(userId, {
+  await db.saveQuizSession(userId, {
     termId: question.termId,
     correctIdx: question.correctIdx,
     options: question.options,
@@ -266,7 +266,7 @@ async function sendQuizRound(ctx: MyContext, draft: QuizDraft): Promise<void> {
     poolTermIds: prepared.candidatePool.map((term) => term.id),
   };
 
-  db.saveQuizSession(userId, session);
+  await db.saveQuizSession(userId, session);
   await ctx.reply(buildQuizRoundQuestionText(ctx, session, firstTerm), {
     parse_mode: "HTML",
     reply_markup: buildQuizAnswerKeyboard(

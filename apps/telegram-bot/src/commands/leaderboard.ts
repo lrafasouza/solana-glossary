@@ -12,7 +12,7 @@ export async function leaderboardCommand(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const top10 = db.getTop10();
+  const top10 = await db.getTop10();
   if (top10.length === 0) {
     await ctx.reply(ctx.t("leaderboard-empty"));
     return;
@@ -43,14 +43,14 @@ async function sendGroupLeaderboard(
   ctx: MyContext,
   chatId: number,
 ): Promise<void> {
-  const top10 = db.getGroupTop10(chatId);
+  const top10 = await db.getGroupTop10(chatId);
   if (top10.length === 0) {
     await ctx.reply(ctx.t("group-leaderboard-empty"));
     return;
   }
 
   const userId = ctx.from?.id;
-  const rank = userId ? db.getGroupRank(chatId, userId) : null;
+  const rank = userId ? await db.getGroupRank(chatId, userId) : null;
   const lines = [ctx.t("group-leaderboard-title"), ""];
 
   top10.forEach((user, index) => {
@@ -89,13 +89,13 @@ export async function rankCommand(ctx: MyContext): Promise<void> {
   }
 
   try {
-    const rank = db.getUserRank(userId);
+    const rank = await db.getUserRank(userId);
     if (!rank) {
       await ctx.reply(ctx.t("rank-no-streak"));
       return;
     }
 
-    const nearby = db.getNearbyRanks(userId, 2);
+    const nearby = await db.getNearbyRanks(userId, 2);
     const lines: string[] = [];
 
     lines.push(

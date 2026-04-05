@@ -3,14 +3,17 @@ import type { MyContext, SessionData } from "../context.js";
 
 export type SupportedLocale = NonNullable<SessionData["language"]>;
 
-export function getEffectiveLocale(
+export async function getEffectiveLocale(
   ctx: Pick<MyContext, "chat" | "from" | "session">,
-): SupportedLocale {
+): Promise<SupportedLocale> {
   const isGroup =
     ctx.chat?.type === "group" || ctx.chat?.type === "supergroup";
 
   if (isGroup && ctx.chat?.id) {
-    const groupLang = db.getGroupLanguage(ctx.chat.id);
+    const groupLang =
+      typeof db.getGroupLanguage === "function"
+        ? await db.getGroupLanguage(ctx.chat.id)
+        : undefined;
     if (isSupportedLocale(groupLang)) return groupLang;
   }
 
@@ -19,7 +22,10 @@ export function getEffectiveLocale(
 
   const userId = ctx.from?.id;
   if (userId) {
-    const userLang = db.getLanguage(userId);
+    const userLang =
+      typeof db.getLanguage === "function"
+        ? await db.getLanguage(userId)
+        : undefined;
     if (isSupportedLocale(userLang)) return userLang;
   }
 

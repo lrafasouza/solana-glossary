@@ -16,9 +16,9 @@ describe("getEffectiveLocale", () => {
     vi.clearAllMocks();
   });
 
-  it("uses stored private language when session is empty", () => {
+  it("uses stored private language when session is empty", async () => {
     dbMock.getLanguage.mockReturnValueOnce("pt");
-    const locale = getEffectiveLocale({
+    const locale = await getEffectiveLocale({
       chat: { type: "private", id: 456 } as any,
       from: { id: 123, language_code: "en" } as any,
       session: { language: undefined } as any,
@@ -26,9 +26,9 @@ describe("getEffectiveLocale", () => {
     expect(locale).toBe("pt");
   });
 
-  it("prefers group language over user language", () => {
+  it("prefers group language over user language", async () => {
     dbMock.getGroupLanguage.mockReturnValueOnce("es");
-    const locale = getEffectiveLocale({
+    const locale = await getEffectiveLocale({
       chat: { type: "group", id: 456 } as any,
       from: { id: 123, language_code: "en" } as any,
       session: { language: "pt" } as any,

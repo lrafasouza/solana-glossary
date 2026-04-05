@@ -98,7 +98,7 @@ bot.use(async (ctx, next) => {
   const userId = ctx.from?.id;
   const firstName = ctx.from?.first_name;
   if (userId && firstName) {
-    db.setFirstName(userId, firstName);
+    await db.setFirstName(userId, firstName);
   }
   return next();
 });

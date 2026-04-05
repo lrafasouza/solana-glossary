@@ -13,11 +13,11 @@ export function startNotificationScheduler(bot: Bot<MyContext>): void {
   // Run every 15 minutes
   cron.schedule("*/15 * * * *", async () => {
     const now = new Date();
-    const pendingNotifications = db.getPendingNotifications(now);
+    const pendingNotifications = await db.getPendingNotifications(now);
 
     for (const notification of pendingNotifications) {
       try {
-        const streak = db.getOrCreateStreak(notification.user_id);
+        const streak = await db.getOrCreateStreak(notification.user_id);
 
         if (
           notification.type === "streak_warning" &&
@@ -32,7 +32,7 @@ export function startNotificationScheduler(bot: Bot<MyContext>): void {
           );
         }
 
-        db.markNotificationSent(notification.id, now);
+        await db.markNotificationSent(notification.id, now);
       } catch (err) {
         console.error(
           `Failed to send notification to ${notification.user_id}:`,
@@ -42,12 +42,12 @@ export function startNotificationScheduler(bot: Bot<MyContext>): void {
     }
 
     // Clean old notifications (older than 7 days)
-    db.clearOldNotifications(7);
+    await db.clearOldNotifications(7);
   });
 
   // Reset weekly freezes on Monday at 00:00
-  cron.schedule("0 0 * * 1", () => {
-    db.resetWeeklyFreezes();
+  cron.schedule("0 0 * * 1", async () => {
+    await db.resetWeeklyFreezes();
     console.log("Weekly streak freezes reset");
   });
 
@@ -57,7 +57,7 @@ export function startNotificationScheduler(bot: Bot<MyContext>): void {
 export function scheduleStreakWarning(
   userId: number,
   timezone: string = "America/Sao_Paulo",
-): void {
+): Promise<void> {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: timezone,
@@ -77,6 +77,8 @@ export function scheduleStreakWarning(
     warningTime = new Date(Date.UTC(year, month - 1, day + 1, 22, 0, 0));
   }
 
-  db.clearPendingNotifications(userId, "streak_warning");
-  db.scheduleNotification(userId, warningTime, "streak_warning");
+  return (async () => {
+    await db.clearPendingNotifications(userId, "streak_warning");
+    await db.scheduleNotification(userId, warningTime, "streak_warning");
+  })();
 }

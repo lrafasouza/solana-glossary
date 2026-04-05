@@ -46,17 +46,21 @@ export async function glossaryCommand(ctx: MyContext): Promise<void> {
   if (result.type === "found") {
     const userId = ctx.from?.id;
     if (userId) {
-      db.addHistory(userId, result.term.id);
+      await db.addHistory(userId, result.term.id);
     }
 
     const card = await buildEnrichedTermCard(
       result.term,
       ctx.t.bind(ctx),
-      getEffectiveLocale(ctx),
+      await getEffectiveLocale(ctx),
     );
     await ctx.reply(card, {
       parse_mode: "HTML",
-      reply_markup: buildTermKeyboard(result.term.id, ctx.t.bind(ctx), userId),
+      reply_markup: await buildTermKeyboard(
+        result.term.id,
+        ctx.t.bind(ctx),
+        userId,
+      ),
     });
     return;
   }

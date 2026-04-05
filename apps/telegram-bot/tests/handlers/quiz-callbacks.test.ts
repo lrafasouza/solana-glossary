@@ -13,6 +13,8 @@ const dbMock = vi.hoisted(() => ({
   recordGroupParticipant: vi.fn(() => ({ participantsToday: 1, date: "2026-04-05" })),
   getOrCreateGroupStreak: vi.fn(() => ({ current_streak: 0, max_streak: 0, last_active_date: "2026-04-04" })),
   incrementGroupStreak: vi.fn(() => ({ newStreak: 1, justCrossedThreshold: true })),
+  clearPendingNotifications: vi.fn(),
+  scheduleNotification: vi.fn(),
 }));
 
 const buildEnrichedTermCardMock = vi.hoisted(() =>
@@ -25,6 +27,7 @@ vi.mock("../../src/db/index.js", () => ({
 }));
 
 vi.mock("../../src/glossary/index.js", () => ({
+  allTerms: [],
   getTerm: vi.fn((id: string) => ({
     id,
     term: id.toUpperCase(),

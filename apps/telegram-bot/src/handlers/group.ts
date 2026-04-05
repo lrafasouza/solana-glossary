@@ -42,7 +42,7 @@ export async function handleBotAdded(ctx: MyContext): Promise<void> {
 
   if (!wasNotMember || !isNowMember || !isGroup || !chatId) return;
 
-  const groupLang = db.getGroupLanguage(chatId) as
+  const groupLang = (await db.getGroupLanguage(chatId)) as
     | SessionData["language"]
     | undefined;
   if (groupLang) {

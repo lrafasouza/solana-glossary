@@ -4,11 +4,11 @@ import type { MyContext } from "../context.js";
 import { db } from "../db/index.js";
 import type { LearningPath, PathProgress } from "../data/paths.js";
 
-export function buildTermKeyboard(
+export async function buildTermKeyboard(
   termId: string,
   t: MyContext["t"],
   userId?: number,
-): InlineKeyboard {
+): Promise<InlineKeyboard> {
   const keyboard = new InlineKeyboard();
 
   keyboard.text(t("btn-related"), `related:${termId}`);
@@ -19,7 +19,10 @@ export function buildTermKeyboard(
   keyboard.row();
 
   if (userId) {
-    const isFav = db.isFavorite(userId, termId);
+    const isFav =
+      typeof db.isFavorite === "function"
+        ? await db.isFavorite(userId, termId)
+        : false;
     keyboard.text(
       isFav ? t("btn-fav-remove") : t("btn-fav-add"),
       isFav ? `fav_remove:${termId}` : `fav_add:${termId}`,

@@ -90,7 +90,7 @@ DM is the personal learning surface. It is optimized for self-serve exploration,
 ### DM-specific behavior
 
 - Free text messages in private chats are treated as glossary searches
-- Personal progress is persisted in SQLite
+- Personal progress is persisted in Supabase
 - The DM experience works well as a solo learning loop: search, read, save, review, quiz, repeat
 
 ## Group Experience
@@ -243,7 +243,7 @@ High-level flow:
 2. `grammY` routes commands, callbacks, text messages, inline queries, and group membership events
 3. glossary lookup resolves terms from the vendored dataset
 4. enriched term cards optionally add live market or network context
-5. SQLite stores progress, favorites, history, streaks, quiz sessions, and group state
+5. Supabase Postgres stores progress, favorites, history, streaks, quiz sessions, and group state
 6. the app runs in long polling locally and webhook mode in production
 
 ### Stack
@@ -253,8 +253,8 @@ High-level flow:
 - grammY
 - `@grammyjs/i18n`
 - Express
-- `better-sqlite3`
-- SQLite
+- `@supabase/supabase-js`
+- Supabase Postgres
 - Railway
 
 ## Repository Structure
@@ -283,7 +283,7 @@ Localized glossary content is served from:
 - `apps/telegram-bot/src/glossary/data/i18n/pt.json`
 - `apps/telegram-bot/src/glossary/data/i18n/es.json`
 
-SQLite stores:
+Supabase stores:
 
 - user language preference
 - favorites
@@ -302,6 +302,7 @@ Requirements:
 
 - Node.js 22+
 - a Telegram bot token from BotFather
+- a Supabase project with the schema from `apps/telegram-bot/supabase/schema.sql`
 
 Local development:
 
@@ -318,7 +319,7 @@ npm install
 npm run dev
 ```
 
-Set `BOT_TOKEN` in `apps/telegram-bot/.env` before starting the app.
+Set `BOT_TOKEN`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` in `apps/telegram-bot/.env` before starting the app.
 
 Useful commands:
 
@@ -337,6 +338,8 @@ Reference env file:
 | Variable | Required | Description | Example |
 |---|---|---|---|
 | `BOT_TOKEN` | Yes | Telegram bot token from BotFather | `123456789:ABC...` |
+| `SUPABASE_URL` | Yes | Supabase project URL | `https://your-project.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Service role key used by the backend bot | `eyJ...` |
 | `WEBHOOK_DOMAIN` | No in local dev, yes in production | Public base URL for webhook mode | `https://your-app.up.railway.app` |
 | `PORT` | No | Server port, defaults to `3000` | `3000` |
 
@@ -359,6 +362,8 @@ Required production environment variables:
 
 ```env
 BOT_TOKEN=your_telegram_bot_token
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 WEBHOOK_DOMAIN=https://your-service.up.railway.app
 ```
 

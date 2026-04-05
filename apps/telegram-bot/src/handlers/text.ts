@@ -32,11 +32,15 @@ export async function handleTextMessage(ctx: MyContext): Promise<void> {
     const card = await buildEnrichedTermCard(
       result.term,
       ctx.t.bind(ctx),
-      getEffectiveLocale(ctx),
+      await getEffectiveLocale(ctx),
     );
     await ctx.reply(card, {
       parse_mode: "HTML",
-      reply_markup: buildTermKeyboard(result.term.id, ctx.t.bind(ctx), userId),
+      reply_markup: await buildTermKeyboard(
+        result.term.id,
+        ctx.t.bind(ctx),
+        userId,
+      ),
     });
     return;
   }

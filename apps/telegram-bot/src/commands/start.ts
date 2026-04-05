@@ -18,7 +18,7 @@ function buildLanguageKeyboard(ctx: MyContext): InlineKeyboard {
 export async function startCommand(ctx: MyContext): Promise<void> {
   const deepLink = (ctx.match as string).trim();
   const userId = ctx.from?.id;
-  const storedLanguage = userId ? db.getLanguage(userId) : undefined;
+  const storedLanguage = userId ? await db.getLanguage(userId) : undefined;
 
   if (deepLink) {
     const result = lookupTerm(deepLink);
@@ -26,11 +26,11 @@ export async function startCommand(ctx: MyContext): Promise<void> {
       const card = await buildEnrichedTermCard(
         result.term,
         ctx.t.bind(ctx),
-        getEffectiveLocale(ctx),
+        await getEffectiveLocale(ctx),
       );
       await ctx.reply(card, {
         parse_mode: "HTML",
-        reply_markup: buildTermKeyboard(
+        reply_markup: await buildTermKeyboard(
           result.term.id,
           ctx.t.bind(ctx),
           userId,

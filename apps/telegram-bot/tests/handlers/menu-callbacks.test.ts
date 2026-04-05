@@ -3,6 +3,13 @@ import { createMockCtx } from "../helpers.js";
 
 const dbMock = vi.hoisted(() => ({
   getGroupLanguage: vi.fn(),
+  getOrCreateStreak: vi.fn(() => ({
+    current_streak: 0,
+    max_streak: 0,
+    streak_freezes_used: 0,
+  })),
+  getUserStreakCalendar: vi.fn(() => [false, false, false, false, false, false, false]),
+  getTop10: vi.fn(() => []),
 }));
 
 vi.mock("../../src/db/index.js", () => ({
@@ -11,6 +18,7 @@ vi.mock("../../src/db/index.js", () => ({
 }));
 
 vi.mock("../../src/glossary/index.js", () => ({
+  allTerms: [],
   getTerm: vi.fn(),
   getTermsByCategory: vi.fn(() => []),
   getCategories: vi.fn(() => []),

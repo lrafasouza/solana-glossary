@@ -20,7 +20,7 @@ export async function dailyTermCommand(ctx: MyContext): Promise<void> {
 
   let streakText = "";
   if (userId) {
-    const { streak, isNew } = db.viewDailyTerm(userId);
+    const { streak, isNew } = await db.viewDailyTerm(userId);
     if (isNew) {
       streakText =
         streak === 1
@@ -38,11 +38,11 @@ export async function dailyTermCommand(ctx: MyContext): Promise<void> {
   const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
-    getEffectiveLocale(ctx),
+    await getEffectiveLocale(ctx),
   );
 
   await ctx.reply(header + card, {
     parse_mode: "HTML",
-    reply_markup: buildTermKeyboard(term.id, ctx.t.bind(ctx), userId),
+    reply_markup: await buildTermKeyboard(term.id, ctx.t.bind(ctx), userId),
   });
 }

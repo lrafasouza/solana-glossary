@@ -12,18 +12,18 @@ export async function randomTermCommand(ctx: MyContext): Promise<void> {
 
   // Add to history if user exists
   if (userId) {
-    db.addHistory(userId, term.id);
+    await db.addHistory(userId, term.id);
   }
 
   const header = ctx.t("random-term-header");
   const card = await buildEnrichedTermCard(
     term,
     ctx.t.bind(ctx),
-    getEffectiveLocale(ctx),
+    await getEffectiveLocale(ctx),
   );
 
   await ctx.reply(`${header}\n\n${card}`, {
     parse_mode: "HTML",
-    reply_markup: buildTermKeyboard(term.id, ctx.t.bind(ctx), userId),
+    reply_markup: await buildTermKeyboard(term.id, ctx.t.bind(ctx), userId),
   });
 }
