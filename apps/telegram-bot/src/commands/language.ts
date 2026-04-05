@@ -1,3 +1,4 @@
+import { db } from "../db/index.js";
 import type { MyContext, SessionData } from "../context.js";
 
 const VALID_LANGUAGES = ["pt", "en", "es"] as const;
@@ -9,6 +10,7 @@ function isValidLang(value: string): value is Lang {
 
 export async function languageCommand(ctx: MyContext): Promise<void> {
   const input = (ctx.match as string).trim().toLowerCase();
+  const userId = ctx.from?.id;
 
   if (!input || !isValidLang(input)) {
     await ctx.reply(ctx.t("language-invalid"), { parse_mode: "HTML" });
@@ -16,6 +18,9 @@ export async function languageCommand(ctx: MyContext): Promise<void> {
   }
 
   ctx.session.language = input as SessionData["language"];
+  if (userId) {
+    db.setLanguage(userId, input);
+  }
   await ctx.i18n.useLocale(input);
   await ctx.reply(ctx.t("language-changed-confirmation"), {
     parse_mode: "HTML",

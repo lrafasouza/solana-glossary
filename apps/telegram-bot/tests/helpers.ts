@@ -43,6 +43,9 @@ export function createMockCtx(options?: {
       data: opts.match ?? "",
       id: "test-cb-id",
     },
+    i18n: {
+      useLocale: vi.fn().mockResolvedValue(undefined),
+    },
     t: (key: string, _params?: Record<string, unknown>) => `[${key}]`,
   } as unknown as MyContext;
 }

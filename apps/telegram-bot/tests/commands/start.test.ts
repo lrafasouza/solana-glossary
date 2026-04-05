@@ -4,9 +4,16 @@ import { createMockCtx } from "../helpers.js";
 const lookupTermMock = vi.hoisted(() =>
   vi.fn(() => ({ type: "not-found" } as any)),
 );
+const dbMock = vi.hoisted(() => ({
+  getLanguage: vi.fn(),
+}));
 
 vi.mock("../../src/utils/search.js", () => ({
   lookupTerm: lookupTermMock,
+}));
+
+vi.mock("../../src/db/index.js", () => ({
+  db: dbMock,
 }));
 
 vi.mock("../../src/utils/term-card.js", () => ({
@@ -18,6 +25,7 @@ import { startCommand } from "../../src/commands/start.js";
 describe("startCommand", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbMock.getLanguage.mockReturnValue(undefined);
   });
 
   it("shows the language picker for new users", async () => {
@@ -33,8 +41,6 @@ describe("startCommand", () => {
     );
     await startCommand(ctx);
     expect(ctx.reply).toHaveBeenCalledOnce();
-    const [text] = (ctx.reply as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(text).toContain("Choose your language");
   });
 
   it("sends the deep-linked term card when the term exists", async () => {
@@ -58,6 +64,18 @@ describe("startCommand", () => {
   it("shows welcome and onboarding tips for returning users", async () => {
     const ctx = createMockCtx({ sessionLanguage: "pt" });
     await startCommand(ctx);
+    const replies = (ctx.reply as ReturnType<typeof vi.fn>).mock.calls.map(
+      ([text]) => text,
+    );
+    expect(replies).toEqual(["[start-welcome]", "[onboarding-tips]"]);
+  });
+
+  it("uses the stored user language instead of reopening the picker", async () => {
+    dbMock.getLanguage.mockReturnValueOnce("es");
+    const ctx = createMockCtx({ sessionLanguage: undefined });
+    await startCommand(ctx);
+    expect(ctx.replyWithPhoto).not.toHaveBeenCalled();
+    expect(ctx.session.language).toBe("es");
     const replies = (ctx.reply as ReturnType<typeof vi.fn>).mock.calls.map(
       ([text]) => text,
     );

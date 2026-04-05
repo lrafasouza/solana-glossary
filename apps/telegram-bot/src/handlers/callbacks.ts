@@ -65,6 +65,9 @@ export async function handleLangCallback(ctx: MyContext): Promise<void> {
     db.setGroupLanguage(chatId, lang!);
   } else {
     ctx.session.language = lang;
+    if (ctx.from?.id) {
+      db.setLanguage(ctx.from.id, lang!);
+    }
   }
   await ctx.i18n.useLocale(lang!);
   await ctx.answerCallbackQuery();

@@ -3,7 +3,8 @@ import { InlineKeyboard } from "grammy";
 import { lookupTerm } from "../utils/search.js";
 import { buildMainMenuKeyboard, buildTermKeyboard } from "../utils/keyboard.js";
 import { IMAGES } from "../config.js";
-import type { MyContext } from "../context.js";
+import { db } from "../db/index.js";
+import type { MyContext, SessionData } from "../context.js";
 import { getEffectiveLocale } from "../utils/locale.js";
 import { buildEnrichedTermCard } from "../utils/term-card.js";
 
@@ -16,11 +17,12 @@ function buildLanguageKeyboard(ctx: MyContext): InlineKeyboard {
 
 export async function startCommand(ctx: MyContext): Promise<void> {
   const deepLink = (ctx.match as string).trim();
+  const userId = ctx.from?.id;
+  const storedLanguage = userId ? db.getLanguage(userId) : undefined;
 
   if (deepLink) {
     const result = lookupTerm(deepLink);
     if (result.type === "found") {
-      const userId = ctx.from?.id;
       const card = await buildEnrichedTermCard(
         result.term,
         ctx.t.bind(ctx),
@@ -38,7 +40,7 @@ export async function startCommand(ctx: MyContext): Promise<void> {
     }
   }
 
-  if (!ctx.session.language) {
+  if (!ctx.session.language && !storedLanguage) {
     const caption = ctx.t("start-language-picker");
     const reply_markup = buildLanguageKeyboard(ctx);
 
@@ -55,6 +57,11 @@ export async function startCommand(ctx: MyContext): Promise<void> {
       });
     }
     return;
+  }
+
+  if (!ctx.session.language && storedLanguage) {
+    ctx.session.language = storedLanguage as SessionData["language"];
+    await ctx.i18n.useLocale(storedLanguage);
   }
 
   await sendWelcome(ctx);

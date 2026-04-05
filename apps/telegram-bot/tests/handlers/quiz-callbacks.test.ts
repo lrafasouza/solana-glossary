@@ -7,6 +7,7 @@ const dbMock = vi.hoisted(() => ({
   clearQuizSession: vi.fn(),
   incrementStreak: vi.fn(() => ({ current: 2, max: 2, isNewRecord: false })),
   getGroupLanguage: vi.fn(),
+  getLanguage: vi.fn(),
   recordGroupMember: vi.fn(),
   maybeResetGroupStreak: vi.fn(() => ({ wasBroken: false })),
   recordGroupParticipant: vi.fn(() => ({ participantsToday: 1, date: "2026-04-05" })),
@@ -14,7 +15,9 @@ const dbMock = vi.hoisted(() => ({
   incrementGroupStreak: vi.fn(() => ({ newStreak: 1, justCrossedThreshold: true })),
 }));
 
-const buildEnrichedTermCardMock = vi.hoisted(() => vi.fn(async () => "<b>Card</b>"));
+const buildEnrichedTermCardMock = vi.hoisted(() =>
+  vi.fn(async () => "<b>Card</b>"),
+);
 
 vi.mock("../../src/db/index.js", () => ({
   db: dbMock,
@@ -49,7 +52,22 @@ describe("quiz callbacks", () => {
   });
 
   it("updates the quiz mode and re-renders the menu", async () => {
+    dbMock.getLanguage.mockReturnValueOnce("pt");
     const ctx = createMockCtx({ match: "quiz_mode:single", chatType: "private" });
+    await handleQuizModeCallback(ctx);
+    expect(ctx.editMessageText).toHaveBeenCalledOnce();
+    const [text] = (ctx.editMessageText as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(text).toContain("[quiz-menu-title]");
+  });
+
+  it("keeps the private quiz menu locale when toggling to round", async () => {
+    dbMock.getLanguage.mockReturnValueOnce("pt");
+    const ctx = createMockCtx({
+      match: "quiz_mode:round",
+      chatType: "private",
+      sessionLanguage: undefined,
+      languageCode: "en",
+    });
     await handleQuizModeCallback(ctx);
     expect(ctx.editMessageText).toHaveBeenCalledOnce();
     const [text] = (ctx.editMessageText as ReturnType<typeof vi.fn>).mock.calls[0];

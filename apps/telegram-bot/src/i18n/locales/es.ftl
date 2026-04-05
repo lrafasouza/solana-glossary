@@ -242,11 +242,11 @@ path-completed-final =
     🧠 Haz el quiz de la ruta para mantener tu racha
 path-quiz = 🧠 Quiz de la ruta
 path-restart = 🔄 Reiniciar
-path-name-solana-basics = Solana Basics
+path-name-solana-basics = Fundamentos de Solana
 path-desc-solana-basics = Fundamentos del protocolo: PoH, slots, epochs y validators
-path-name-defi-foundations = DeFi Foundations
+path-name-defi-foundations = Fundamentos de DeFi
 path-desc-defi-foundations = Cómo funciona DeFi en Solana: AMMs, pools y swaps
-path-name-builders-path = Builder's Path
+path-name-builders-path = Ruta Builder
 path-desc-builders-path = Lo que todo dev Solana debe saber: programs, PDAs y CPIs
 
 explain-no-reply =
